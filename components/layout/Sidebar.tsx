@@ -21,7 +21,7 @@ const navConfig: Record<Role, NavItem[]> = {
   RESPONSABLE_PROGRAMME: [
     { label: 'Tableau de bord', href: '/responsable', icon: <GridIcon />, exact: true },
     { label: 'Dossiers vacataires', href: '/responsable/vacataires', icon: <FolderIcon /> },
-    { label: 'Validations', href: '/responsable/validations', icon: <CheckSquareIcon /> },
+    { label: "Relevés d'heures", href: '/responsable/releves', icon: <ClockIcon /> },
   ],
   ATTACHE_CLASSE: [
     { label: 'Tableau de bord', href: '/attache', icon: <GridIcon />, exact: true },
@@ -30,12 +30,12 @@ const navConfig: Record<Role, NavItem[]> = {
   ],
   RELAIS_FINANCE: [
     { label: 'Tableau de bord', href: '/finance', icon: <GridIcon />, exact: true },
+    { label: 'Validation relevés', href: '/finance/validations', icon: <CheckSquareIcon /> },
     { label: 'Rémunérations', href: '/finance/remunerations', icon: <MoneyIcon /> },
-    { label: 'Fiches de paie', href: '/finance/fiches-paie', icon: <DocumentIcon /> },
   ],
   VACATAIRE: [
     { label: 'Tableau de bord', href: '/vacataire', icon: <GridIcon />, exact: true },
-    { label: 'Mon contrat', href: '/vacataire/contrat', icon: <DocumentIcon /> },
+    { label: 'Mes relevés validés', href: '/vacataire/releves', icon: <ClockIcon /> },
     { label: 'Mes fiches de paie', href: '/vacataire/fiches-paie', icon: <MoneyIcon /> },
   ],
 }
