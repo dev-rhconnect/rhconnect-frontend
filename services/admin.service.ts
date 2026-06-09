@@ -20,9 +20,26 @@ export interface UtilisateurResponse {
   premierConnexion: boolean
 }
 
+export interface CreateUserRequest {
+  prenom: string
+  nom: string
+  email: string
+  role: string
+  motDePasseTemporaire?: string
+}
+
 export const adminService = {
   listerUtilisateurs: () =>
     api.get<UtilisateurResponse[]>('/admin/utilisateurs').then((r) => r.data),
+
+  creerCompte: (data: CreateUserRequest) =>
+    api.post<UtilisateurResponse>('/admin/utilisateurs', data).then((r) => r.data),
+
+  activer: (id: number) =>
+    api.patch(`/admin/utilisateurs/${id}/activer`).then((r) => r.data),
+
+  desactiver: (id: number) =>
+    api.patch(`/admin/utilisateurs/${id}/desactiver`).then((r) => r.data),
 
   logs: () =>
     api.get<AuditLog[]>('/admin/logs').then((r) => r.data),

@@ -4,14 +4,15 @@ import Link from 'next/link'
 import { useAuthStore } from '@/store/auth.store'
 import { useQuery } from '@tanstack/react-query'
 import { adminService } from '@/services/admin.service'
-import { vacataireService } from '@/services/vacataire.service'
+
+const ROLES_ADMIN = ['RESPONSABLE_PROGRAMME', 'ATTACHE_CLASSE', 'RELAIS_FINANCE', 'ADMIN']
 
 export default function AdminDashboard() {
   const { user } = useAuthStore()
 
-  const { data: vacataires = [] } = useQuery({
-    queryKey: ['vacataires'],
-    queryFn: vacataireService.listerTous,
+  const { data: tous = [] } = useQuery({
+    queryKey: ['utilisateurs-admin'],
+    queryFn: adminService.listerUtilisateurs,
   })
 
   const { data: logs = [] } = useQuery({
@@ -19,9 +20,10 @@ export default function AdminDashboard() {
     queryFn: adminService.logs,
   })
 
-  const total = vacataires.length
-  const complets = vacataires.filter((v) => v.profilComplet).length
-  const incomplets = total - complets
+  const utilisateurs = tous.filter((u) => ROLES_ADMIN.includes(u.role))
+  const actifs = utilisateurs.filter((u) => u.actif).length
+  const inactifs = utilisateurs.length - actifs
+  const enAttente = utilisateurs.filter((u) => u.premierConnexion).length
 
   return (
     <div>
@@ -31,9 +33,16 @@ export default function AdminDashboard() {
             Bonjour, {user?.prenom ?? 'Admin'}
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Supervision des dossiers vacataires et des activités du système.
+            Gérez les comptes de l'équipe et supervisez l'activité du système.
           </p>
         </div>
+        <Link
+          href="/admin/utilisateurs"
+          className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold text-white"
+          style={{ background: '#C88500' }}
+        >
+          Gérer les comptes
+        </Link>
       </div>
 
       {/* KPIs */}
@@ -50,48 +59,50 @@ export default function AdminDashboard() {
               Voir tous →
             </Link>
           </div>
-          <p className="text-sm text-gray-500">Total vacataires</p>
-          <p className="mt-1 text-4xl font-bold text-gray-900">{total}</p>
+          <p className="text-sm text-gray-500">Comptes créés</p>
+          <p className="mt-1 text-4xl font-bold text-gray-900">{utilisateurs.length}</p>
+          <p className="mt-1 text-xs text-gray-400">{actifs} actif{actifs !== 1 ? 's' : ''}</p>
         </div>
 
-        <div className="rounded-2xl bg-white p-5 shadow-sm">
+        <div className={`rounded-2xl p-5 shadow-sm ${inactifs > 0 ? 'border-2 border-red-100 bg-red-50' : 'bg-white'}`}>
           <div className="mb-4 flex items-start justify-between">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50">
-              <svg className="h-5 w-5 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="20 6 9 17 4 12" />
+            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${inactifs > 0 ? 'bg-red-100' : 'bg-gray-50'}`}>
+              <svg className={`h-5 w-5 ${inactifs > 0 ? 'text-red-500' : 'text-gray-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
               </svg>
             </div>
-            <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-600">Complets</span>
-          </div>
-          <p className="text-sm text-gray-500">Profils complets</p>
-          <p className="mt-1 text-4xl font-bold text-green-600">{complets}</p>
-          <p className="mt-1 text-xs text-gray-400">contrat actif + signature uploadée</p>
-        </div>
-
-        <div className={`rounded-2xl p-5 shadow-sm ${incomplets > 0 ? 'border-2 border-amber-200 bg-amber-50' : 'bg-white'}`}>
-          <div className="mb-4 flex items-start justify-between">
-            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${incomplets > 0 ? 'bg-amber-100' : 'bg-orange-50'}`}>
-              <svg className={`h-5 w-5 ${incomplets > 0 ? 'text-amber-500' : 'text-ism-gold'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-              </svg>
-            </div>
-            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${incomplets > 0 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
-              Incomplets
+            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${inactifs > 0 ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-500'}`}>
+              Désactivés
             </span>
           </div>
-          <p className="text-sm text-gray-500">Profils incomplets</p>
-          <p className={`mt-1 text-4xl font-bold ${incomplets > 0 ? 'text-amber-600' : 'text-gray-900'}`}>{incomplets}</p>
+          <p className="text-sm text-gray-500">Comptes inactifs</p>
+          <p className={`mt-1 text-4xl font-bold ${inactifs > 0 ? 'text-red-600' : 'text-gray-900'}`}>{inactifs}</p>
+        </div>
+
+        <div className={`rounded-2xl p-5 shadow-sm ${enAttente > 0 ? 'border-2 border-amber-200 bg-amber-50' : 'bg-white'}`}>
+          <div className="mb-4 flex items-start justify-between">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${enAttente > 0 ? 'bg-amber-100' : 'bg-orange-50'}`}>
+              <svg className={`h-5 w-5 ${enAttente > 0 ? 'text-amber-500' : 'text-ism-gold'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+              </svg>
+            </div>
+            <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${enAttente > 0 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+              En attente
+            </span>
+          </div>
+          <p className="text-sm text-gray-500">1ère connexion en attente</p>
+          <p className={`mt-1 text-4xl font-bold ${enAttente > 0 ? 'text-amber-600' : 'text-gray-900'}`}>{enAttente}</p>
         </div>
       </div>
 
-      {/* Accès rapides */}
+      {/* Accès rapides + derniers logs */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <h3 className="mb-3 text-sm font-bold text-gray-900">Accès rapides</h3>
           <div className="space-y-2">
             {[
-              { label: 'Dossiers vacataires', href: '/admin/utilisateurs', desc: 'Vérifier profils, signatures, contrats' },
-              { label: "Logs d'audit", href: '/admin/logs', desc: 'Traçabilité des actions du système' },
+              { label: 'Comptes utilisateurs',  href: '/admin/utilisateurs', desc: 'Créer, activer ou désactiver des comptes' },
+              { label: "Logs d'audit",          href: '/admin/logs',         desc: 'Traçabilité des actions du système' },
             ].map((item) => (
               <Link
                 key={item.href}

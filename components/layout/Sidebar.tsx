@@ -21,6 +21,7 @@ const navConfig: Record<Role, NavItem[]> = {
   RESPONSABLE_PROGRAMME: [
     { label: 'Tableau de bord', href: '/responsable', icon: <GridIcon />, exact: true },
     { label: 'Dossiers vacataires', href: '/responsable/vacataires', icon: <FolderIcon /> },
+    { label: 'Contrats', href: '/responsable/contrats', icon: <DocumentIcon /> },
     { label: "Relevés d'heures", href: '/responsable/releves', icon: <ClockIcon /> },
     { label: 'Emploi du temps', href: '/responsable/emploi-du-temps', icon: <CalendarIcon /> },
   ],

@@ -17,6 +17,18 @@ export interface ContratResponse {
   estAvenant: boolean
 }
 
+export interface ContratRequest {
+  vacataireId: number
+  module: string
+  classe: string
+  volumeHorairePrevisionnel: number
+  tauxHoraire: number
+  dateDebut: string
+  dateFin: string
+  estAvenant?: boolean
+  contratParentId?: number
+}
+
 export const contratService = {
   listerTous: () =>
     api.get<ContratResponse[]>('/contrats').then((r) => r.data),
@@ -25,6 +37,9 @@ export const contratService = {
     const all = await api.get<ContratResponse[]>('/contrats').then((r) => r.data)
     return all.filter((c) => c.statut === 'ACTIF')
   },
+
+  creer: (data: ContratRequest) =>
+    api.post<ContratResponse>('/contrats', data).then((r) => r.data),
 
   expirants: () =>
     api.get<ContratResponse[]>('/contrats/expirants').then((r) => r.data),
