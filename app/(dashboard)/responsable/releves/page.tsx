@@ -1,8 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
-import { releveService, type StatutReleve } from '@/services/releve.service'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { releveService, type StatutReleve, type FeuilleHeureResponse } from '@/services/releve.service'
 
 const statutConfig: Record<StatutReleve, { label: string; className: string }> = {
   EN_COURS: { label: 'En cours',  className: 'bg-gray-100 text-gray-600' },
@@ -14,12 +14,25 @@ const statutConfig: Record<StatutReleve, { label: string; className: string }> =
 type Filtre = 'TOUS' | StatutReleve
 
 export default function RPRelevesPage() {
+  const queryClient = useQueryClient()
   const [filtre, setFiltre] = useState<Filtre>('TOUS')
   const [search, setSearch] = useState('')
+  const [reponseModal, setReponseModal] = useState<FeuilleHeureResponse | null>(null)
+  const [reponseTexte, setReponseTexte] = useState('')
 
   const { data: releves = [], isLoading, isError } = useQuery({
     queryKey: ['releves-equipe'],
     queryFn: releveService.equipe,
+  })
+
+  const { mutate: repondre, isPending: repondreEnCours } = useMutation({
+    mutationFn: ({ id, reponse }: { id: number; reponse: string }) =>
+      releveService.repondreExplication(id, reponse),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['releves-equipe'] })
+      setReponseModal(null)
+      setReponseTexte('')
+    },
   })
 
   const filtered = releves.filter((r) => {
@@ -116,6 +129,7 @@ export default function RPRelevesPage() {
                 <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-gray-400">Volume prévu</th>
                 <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Statut</th>
                 <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Motif rejet</th>
+                <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-gray-400">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -155,6 +169,17 @@ export default function RPRelevesPage() {
                     <td className="px-5 py-4 text-sm text-gray-500 max-w-xs truncate">
                       {r.motifRejet ?? '—'}
                     </td>
+                    <td className="px-5 py-4 text-right">
+                      {r.statut === 'REJETE' && (
+                        <button
+                          onClick={() => { setReponseModal(r); setReponseTexte('') }}
+                          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors"
+                          style={{ background: '#C88500' }}
+                        >
+                          Répondre
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 )
               })}
@@ -162,6 +187,51 @@ export default function RPRelevesPage() {
           </table>
         )}
       </div>
+
+      {/* Modal répondre demande d'explication */}
+      {reponseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <h3 className="text-lg font-bold text-gray-900">Répondre à la demande d'explication</h3>
+            <p className="mt-1 text-sm text-gray-500">
+              {reponseModal.nomVacataire} — {reponseModal.module} — {reponseModal.periode}
+            </p>
+            {reponseModal.motifRejet && (
+              <div className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                <span className="font-semibold">Motif Finance : </span>{reponseModal.motifRejet}
+              </div>
+            )}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Votre réponse <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={reponseTexte}
+                onChange={(e) => setReponseTexte(e.target.value)}
+                rows={4}
+                placeholder="Expliquez la situation au Relais Finance…"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-400 resize-none"
+              />
+            </div>
+            <div className="mt-5 flex items-center justify-end gap-3">
+              <button
+                onClick={() => setReponseModal(null)}
+                className="rounded-xl px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => repondre({ id: reponseModal.id, reponse: reponseTexte })}
+                disabled={!reponseTexte.trim() || repondreEnCours}
+                className="rounded-xl px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 transition-colors"
+                style={{ background: '#C88500' }}
+              >
+                {repondreEnCours ? 'Envoi…' : 'Envoyer la réponse'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

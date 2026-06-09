@@ -26,6 +26,19 @@ export const paiementService = {
   trouverParId: (id: number) =>
     api.get<PaiementResponse>(`/paie/${id}`).then((r) => r.data),
 
+  exporterBC365: async (): Promise<void> => {
+    const response = await api.get('/paie/export-bc365', { responseType: 'blob' })
+    const url = window.URL.createObjectURL(new Blob([response.data], { type: 'text/csv' }))
+    const link = document.createElement('a')
+    link.href = url
+    const date = new Date().toISOString().slice(0, 10)
+    link.setAttribute('download', `export_bc365_${date}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  },
+
   telechargerPdf: async (id: number): Promise<void> => {
     const response = await api.get(`/paie/${id}/telecharger`, { responseType: 'blob' })
     const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
