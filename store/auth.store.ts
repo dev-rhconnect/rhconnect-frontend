@@ -10,6 +10,7 @@ interface AuthState {
   login: (data: AuthResponse) => void
   logout: () => void
   setHasHydrated: (v: boolean) => void
+  updateUser: (patch: Partial<User>) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -33,6 +34,7 @@ export const useAuthStore = create<AuthState>()(
         }),
       logout: () => set({ token: null, refreshToken: null, user: null }),
       setHasHydrated: (v) => set({ _hasHydrated: v }),
+      updateUser: (patch) => set((s) => ({ user: s.user ? { ...s.user, ...patch } : s.user })),
     }),
     {
       name: 'rhconnect-auth',
