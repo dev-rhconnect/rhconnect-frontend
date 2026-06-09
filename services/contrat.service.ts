@@ -25,4 +25,22 @@ export const contratService = {
     const all = await api.get<ContratResponse[]>('/contrats').then((r) => r.data)
     return all.filter((c) => c.statut === 'ACTIF')
   },
+
+  expirants: () =>
+    api.get<ContratResponse[]>('/contrats/expirants').then((r) => r.data),
+
+  monContrat: () =>
+    api.get<ContratResponse[]>('/contrats/mon-contrat').then((r) => r.data),
+
+  telechargerPdf: async (id: number): Promise<void> => {
+    const response = await api.get(`/contrats/${id}/pdf`, { responseType: 'blob' })
+    const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }))
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `Contrat_RHC-${String(id).padStart(5, '0')}.pdf`)
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  },
 }

@@ -52,4 +52,18 @@ export const vacataireService = {
 
   archiver: (id: number) =>
     api.patch<void>(`/vacataires/${id}/archiver`).then((r) => r.data),
+
+  uploadSignature: (id: number, file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.post<VacataireResponse>(`/vacataires/${id}/signature`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data)
+  },
+
+  monDossier: () =>
+    api.get<VacataireResponse>('/vacataires/mon-dossier').then((r) => r.data),
+
+  mettreAJourCoordonnees: (data: Partial<VacataireRequest>) =>
+    api.patch<VacataireResponse>('/vacataires/mes-coordonnees', data).then((r) => r.data),
 }

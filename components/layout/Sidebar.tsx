@@ -15,7 +15,7 @@ interface NavItem {
 const navConfig: Record<Role, NavItem[]> = {
   ADMIN: [
     { label: 'Tableau de bord', href: '/admin', icon: <GridIcon />, exact: true },
-    { label: 'Utilisateurs', href: '/admin/utilisateurs', icon: <UsersIcon /> },
+    { label: 'Dossiers vacataires', href: '/admin/utilisateurs', icon: <UsersIcon /> },
     { label: "Logs d'audit", href: '/admin/logs', icon: <LogIcon /> },
   ],
   RESPONSABLE_PROGRAMME: [
@@ -35,6 +35,7 @@ const navConfig: Record<Role, NavItem[]> = {
   ],
   VACATAIRE: [
     { label: 'Tableau de bord', href: '/vacataire', icon: <GridIcon />, exact: true },
+    { label: 'Ma fiche de vacation', href: '/vacataire/contrat', icon: <DocumentIcon /> },
     { label: 'Mes relevés validés', href: '/vacataire/releves', icon: <ClockIcon /> },
     { label: 'Mes fiches de paie', href: '/vacataire/fiches-paie', icon: <MoneyIcon /> },
   ],
