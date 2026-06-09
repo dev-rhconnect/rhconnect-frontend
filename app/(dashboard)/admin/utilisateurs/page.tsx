@@ -1,12 +1,178 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { vacataireService, type VacataireResponse } from '@/services/vacataire.service'
+import { vacataireService } from '@/services/vacataire.service'
+
+function UploadSignatureModal({
+  vacataireNom,
+  onClose,
+  onConfirm,
+  uploading,
+}: {
+  vacataireNom: string
+  onClose: () => void
+  onConfirm: (file: File) => void
+  uploading: boolean
+}) {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [file, setFile] = useState<File | null>(null)
+  const [dragging, setDragging] = useState(false)
+
+  const handleFile = (f: File) => setFile(f)
+
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setDragging(false)
+    const f = e.dataTransfer.files[0]
+    if (f) handleFile(f)
+  }, [])
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} o`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-gray-100 px-6 py-4">
+          <div>
+            <h3 className="text-base font-bold text-gray-900">Signature électronique</h3>
+            <p className="mt-0.5 text-xs text-gray-500">{vacataireNom}</p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 transition-colors">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="px-6 py-5">
+          {/* Zone drag-and-drop */}
+          {!file ? (
+            <div
+              onDragOver={(e) => { e.preventDefault(); setDragging(true) }}
+              onDragLeave={() => setDragging(false)}
+              onDrop={onDrop}
+              onClick={() => inputRef.current?.click()}
+              className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-12 transition-colors ${
+                dragging
+                  ? 'border-amber-400 bg-amber-50'
+                  : 'border-gray-200 bg-gray-50 hover:border-amber-300 hover:bg-amber-50/40'
+              }`}
+            >
+              <div className={`mb-4 flex h-14 w-14 items-center justify-center rounded-2xl transition-colors ${dragging ? 'bg-amber-100' : 'bg-white shadow-sm'}`}>
+                <svg className={`h-7 w-7 transition-colors ${dragging ? 'text-amber-500' : 'text-gray-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              </div>
+              <p className="text-sm font-semibold text-gray-700">
+                {dragging ? 'Relâchez pour importer' : 'Déposez le fichier ici'}
+              </p>
+              <p className="mt-1 text-xs text-gray-400">ou{' '}
+                <span className="font-semibold" style={{ color: '#C88500' }}>
+                  sélectionnez depuis votre ordinateur
+                </span>
+              </p>
+              <p className="mt-3 text-xs text-gray-300">PNG, JPG, PDF — max 5 Mo</p>
+            </div>
+          ) : (
+            /* Aperçu fichier sélectionné */
+            <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
+                  {file.type.startsWith('image/') ? (
+                    <svg className="h-6 w-6 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>
+                  ) : (
+                    <svg className="h-6 w-6 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-gray-900">{file.name}</p>
+                  <p className="text-xs text-gray-400">{formatSize(file.size)}</p>
+                </div>
+                <button
+                  onClick={() => setFile(null)}
+                  className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-200 transition-colors"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                </button>
+              </div>
+
+              {/* Miniature si image */}
+              {file.type.startsWith('image/') && (
+                <div className="mt-3 overflow-hidden rounded-xl border border-gray-100">
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt="Aperçu signature"
+                    className="h-28 w-full object-contain bg-white"
+                  />
+                </div>
+              )}
+
+              <button
+                onClick={() => inputRef.current?.click()}
+                className="mt-3 text-xs font-semibold hover:underline"
+                style={{ color: '#C88500' }}
+              >
+                Changer de fichier
+              </button>
+            </div>
+          )}
+
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*,.pdf"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0]
+              if (f) handleFile(f)
+              e.target.value = ''
+            }}
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center justify-end gap-3 border-t border-gray-100 px-6 py-4">
+          <button
+            onClick={onClose}
+            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+          >
+            Annuler
+          </button>
+          <button
+            onClick={() => file && onConfirm(file)}
+            disabled={!file || uploading}
+            className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50"
+            style={{ background: '#C88500' }}
+          >
+            {uploading ? (
+              <>
+                <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" strokeOpacity="0.25" /><path d="M12 2a10 10 0 0 1 10 10" /></svg>
+                Upload en cours…
+              </>
+            ) : (
+              <>
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                Confirmer l'upload
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function AdminUtilisateursPage() {
   const queryClient = useQueryClient()
-  const [uploadId, setUploadId] = useState<number | null>(null)
+  const [uploadTarget, setUploadTarget] = useState<{ id: number; nom: string } | null>(null)
   const [search, setSearch] = useState('')
 
   const { data: vacataires = [], isLoading, isError } = useQuery({
@@ -19,7 +185,7 @@ export default function AdminUtilisateursPage() {
       vacataireService.uploadSignature(id, file),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vacataires-admin'] })
-      setUploadId(null)
+      setUploadTarget(null)
     },
   })
 
@@ -34,6 +200,9 @@ export default function AdminUtilisateursPage() {
 
   const complets   = vacataires.filter((v) => v.profilComplet).length
   const incomplets = vacataires.length - complets
+
+  const openUpload = (v: { id: number; prenom: string; nom: string }) =>
+    setUploadTarget({ id: v.id, nom: `${v.prenom} ${v.nom}` })
 
   return (
     <div>
@@ -133,28 +302,16 @@ export default function AdminUtilisateursPage() {
                     )}
                   </td>
                   <td className="px-5 py-4 text-right">
-                    {!v.signatureUploaded && (
-                      <>
-                        <label
-                          htmlFor={`sig-${v.id}`}
-                          className="cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-colors"
-                          style={{ background: '#C88500' }}
-                          onClick={() => setUploadId(v.id)}
-                        >
-                          {uploading && uploadId === v.id ? 'Upload…' : 'Uploader signature'}
-                        </label>
-                        <input
-                          id={`sig-${v.id}`}
-                          type="file"
-                          accept="image/*,.pdf"
-                          className="hidden"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) uploadSignature({ id: v.id, file })
-                          }}
-                        />
-                      </>
-                    )}
+                    <button
+                      onClick={() => openUpload(v)}
+                      className="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
+                      style={v.signatureUploaded
+                        ? { color: '#C88500', background: '#FFF7E6' }
+                        : { color: '#fff', background: '#C88500' }
+                      }
+                    >
+                      {v.signatureUploaded ? 'Remplacer signature' : 'Uploader signature'}
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -162,6 +319,16 @@ export default function AdminUtilisateursPage() {
           </table>
         )}
       </div>
+
+      {/* Modal upload signature */}
+      {uploadTarget && (
+        <UploadSignatureModal
+          vacataireNom={uploadTarget.nom}
+          uploading={uploading}
+          onClose={() => setUploadTarget(null)}
+          onConfirm={(file) => uploadSignature({ id: uploadTarget.id, file })}
+        />
+      )}
     </div>
   )
 }
