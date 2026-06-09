@@ -63,7 +63,7 @@ export default function VacataireContratPage() {
   const contratActif = contrats.find((c) => c.statut === 'ACTIF')
 
   return (
-    <div>
+    <div className="mx-auto max-w-4xl">
       {/* En-tête */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900">Ma fiche de vacation</h2>

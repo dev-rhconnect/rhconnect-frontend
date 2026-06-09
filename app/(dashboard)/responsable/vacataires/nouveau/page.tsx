@@ -78,7 +78,7 @@ export default function NouveauVacatairePage() {
   }
 
   return (
-    <div>
+    <div className="mx-auto max-w-3xl">
       {/* Fil d'ariane */}
       <div className="mb-6 flex items-center gap-2 text-sm text-gray-500">
         <Link href="/responsable/vacataires" className="hover:text-gray-800 transition-colors">

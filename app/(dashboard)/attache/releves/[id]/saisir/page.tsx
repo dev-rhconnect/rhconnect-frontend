@@ -75,7 +75,7 @@ export default function SaisirSeancePage() {
   }
 
   return (
-    <div>
+    <div className="mx-auto max-w-5xl">
       {/* En-tête */}
       <div className="mb-6 flex items-start justify-between">
         <div>
