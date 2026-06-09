@@ -22,11 +22,12 @@ const navConfig: Record<Role, NavItem[]> = {
     { label: 'Tableau de bord', href: '/responsable', icon: <GridIcon />, exact: true },
     { label: 'Dossiers vacataires', href: '/responsable/vacataires', icon: <FolderIcon /> },
     { label: "Relevés d'heures", href: '/responsable/releves', icon: <ClockIcon /> },
+    { label: 'Emploi du temps', href: '/responsable/emploi-du-temps', icon: <CalendarIcon /> },
   ],
   ATTACHE_CLASSE: [
     { label: 'Tableau de bord', href: '/attache', icon: <GridIcon />, exact: true },
     { label: "Relevés d'heures", href: '/attache/releves', icon: <ClockIcon /> },
-    { label: 'Planning', href: '/attache/planning', icon: <CalendarIcon /> },
+    { label: 'Validations séances', href: '/attache/validations', icon: <CheckSquareIcon /> },
   ],
   RELAIS_FINANCE: [
     { label: 'Tableau de bord', href: '/finance', icon: <GridIcon />, exact: true },
@@ -36,6 +37,7 @@ const navConfig: Record<Role, NavItem[]> = {
   VACATAIRE: [
     { label: 'Tableau de bord', href: '/vacataire', icon: <GridIcon />, exact: true },
     { label: 'Ma fiche de vacation', href: '/vacataire/contrat', icon: <DocumentIcon /> },
+    { label: 'Mes disponibilités', href: '/vacataire/disponibilites', icon: <CalendarIcon /> },
     { label: 'Mes relevés validés', href: '/vacataire/releves', icon: <ClockIcon /> },
     { label: 'Mes fiches de paie', href: '/vacataire/fiches-paie', icon: <MoneyIcon /> },
   ],
