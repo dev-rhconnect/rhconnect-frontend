@@ -1,27 +1,43 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 import { useAuthStore } from '@/store/auth.store'
 import { useQuery } from '@tanstack/react-query'
 import { releveService } from '@/services/releve.service'
 import { paiementService } from '@/services/paiement.service'
+import { rapportService } from '@/services/rapport.service'
 
 export default function FinanceDashboard() {
   const { user } = useAuthStore()
 
-  const { data: soumis = [] } = useQuery({
-    queryKey: ['releves-soumis'],
-    queryFn: releveService.listerSoumis,
-  })
+  const moisCourant = new Date().toISOString().slice(0, 7)
+  const [exportMois, setExportMois] = useState(moisCourant)
+  const [exporting, setExporting] = useState<null | 'pdf' | 'excel'>(null)
 
-  const { data: paiements = [] } = useQuery({
-    queryKey: ['paiements'],
-    queryFn: paiementService.listerTous,
-  })
+  const { data: soumis    = [] } = useQuery({ queryKey: ['releves-soumis'], queryFn: releveService.listerSoumis })
+  const { data: paiements = [] } = useQuery({ queryKey: ['paiements'], queryFn: paiementService.listerTous })
+  const { data: equipe    = [] } = useQuery({ queryKey: ['releves-equipe'], queryFn: releveService.equipe })
 
-  const totalAValider = soumis.length
+  const totalAValider  = soumis.length
+  const montantTotal   = paiements.reduce((sum, p) => sum + (p.montantNet ?? 0), 0)
   const totalPaiements = paiements.length
-  const montantTotal = paiements.reduce((sum, p) => sum + (p.montantNet ?? 0), 0)
+
+  // KPI : relevés avec écart volume horaire (heures validées > volume prévu)
+  const ecarts = equipe.filter((r) => {
+    if (!r.volumeHorairePrevisionnel || r.volumeHorairePrevisionnel === 0) return false
+    return r.totalHeuresValidees > r.volumeHorairePrevisionnel
+  })
+
+  const handleExport = async (format: 'pdf' | 'excel') => {
+    setExporting(format)
+    try {
+      if (format === 'pdf')   await rapportService.telechargerFinancePdf(exportMois)
+      else                    await rapportService.telechargerFinanceExcel(exportMois)
+    } finally {
+      setExporting(null)
+    }
+  }
 
   return (
     <div>
@@ -34,17 +50,56 @@ export default function FinanceDashboard() {
             Validez les relevés d'heures et supervisez les rémunérations.
           </p>
         </div>
-        <Link
-          href="/finance/validations"
-          className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold text-white"
-          style={{ background: '#C88500' }}
-        >
-          Voir les validations
-        </Link>
+
+        <div className="flex items-center gap-2">
+          {/* Export paiements */}
+          <div className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2">
+            <input
+              type="month"
+              value={exportMois}
+              onChange={(e) => setExportMois(e.target.value)}
+              className="text-xs text-gray-600 focus:outline-none"
+            />
+            <button
+              onClick={() => handleExport('pdf')}
+              disabled={exporting !== null}
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white disabled:opacity-60 transition-opacity"
+              style={{ background: '#7A4010' }}
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              {exporting === 'pdf' ? '...' : 'PDF'}
+            </button>
+            <button
+              onClick={() => handleExport('excel')}
+              disabled={exporting !== null}
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white disabled:opacity-60 transition-opacity"
+              style={{ background: '#2E7D32' }}
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              {exporting === 'excel' ? '...' : 'Excel'}
+            </button>
+          </div>
+          <Link
+            href="/finance/validations"
+            className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold text-white"
+            style={{ background: '#C88500' }}
+          >
+            Voir les validations
+          </Link>
+        </div>
       </div>
 
       {/* KPIs */}
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+        {/* Relevés à valider */}
         <div className={`rounded-2xl p-5 shadow-sm ${totalAValider > 0 ? 'border-2 border-blue-200 bg-blue-50' : 'bg-white'}`}>
           <div className="mb-4 flex items-start justify-between">
             <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${totalAValider > 0 ? 'bg-blue-100' : 'bg-orange-50'}`}>
@@ -61,6 +116,7 @@ export default function FinanceDashboard() {
           <p className={`mt-1 text-4xl font-bold ${totalAValider > 0 ? 'text-blue-600' : 'text-gray-900'}`}>{totalAValider}</p>
         </div>
 
+        {/* Fiches de paie */}
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-start justify-between">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50">
@@ -75,6 +131,7 @@ export default function FinanceDashboard() {
           <p className="mt-1 text-4xl font-bold text-gray-900">{totalPaiements}</p>
         </div>
 
+        {/* Montant net total */}
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-start justify-between">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50">
@@ -90,15 +147,36 @@ export default function FinanceDashboard() {
             {montantTotal.toLocaleString('fr-FR')}
           </p>
         </div>
+
+        {/* Écarts volume horaire */}
+        <div className={`rounded-2xl p-5 shadow-sm ${ecarts.length > 0 ? 'border-2 border-amber-200 bg-amber-50' : 'bg-white'}`}>
+          <div className="mb-3 flex items-center gap-2">
+            <svg className={`h-5 w-5 ${ecarts.length > 0 ? 'text-amber-500' : 'text-ism-gold'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+            <span className={`text-sm font-bold ${ecarts.length > 0 ? 'text-amber-700' : 'text-ism-gold'}`}>
+              Écarts volume
+            </span>
+          </div>
+          {ecarts.length > 0 ? (
+            <>
+              <p className="text-3xl font-bold text-amber-700">{ecarts.length}</p>
+              <p className="mt-1 text-xs text-amber-600">relevé{ecarts.length !== 1 ? 's' : ''} dépassant le volume prévu</p>
+            </>
+          ) : (
+            <p className="text-sm text-gray-600">Aucun écart de volume horaire détecté.</p>
+          )}
+        </div>
       </div>
 
-      {/* Accès rapides */}
+      {/* Accès rapides + relevés en attente */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <h3 className="mb-3 text-sm font-bold text-gray-900">Accès rapides</h3>
           <div className="space-y-2">
             {[
-              { label: 'Validation des relevés', href: '/finance/validations', desc: 'Valider ou rejeter les relevés soumis' },
+              { label: 'Validation des relevés',  href: '/finance/validations',  desc: 'Valider ou rejeter les relevés soumis' },
+              { label: 'Rémunérations',           href: '/finance/remunerations', desc: 'Gérer les fiches de paie et paiements' },
             ].map((item) => (
               <Link
                 key={item.href}

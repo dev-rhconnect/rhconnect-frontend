@@ -17,6 +17,7 @@ export interface VacataireResponse {
   rib?: string
   statut: StatutVacataire
   signatureUploaded: boolean
+  profilComplet?: boolean
 }
 
 export interface VacataireRequest {

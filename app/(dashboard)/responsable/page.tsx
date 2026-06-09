@@ -1,33 +1,47 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 import { useAuthStore } from '@/store/auth.store'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { vacataireService } from '@/services/vacataire.service'
 import { contratService } from '@/services/contrat.service'
 import { seanceService } from '@/services/seance.service'
+import { releveService } from '@/services/releve.service'
+import { rapportService } from '@/services/rapport.service'
 
 export default function ResponsableDashboard() {
   const { user } = useAuthStore()
 
-  const { data: vacataires = [] } = useQuery({
-    queryKey: ['vacataires'],
-    queryFn: vacataireService.listerTous,
-  })
+  const moisCourant = new Date().toISOString().slice(0, 7)
+  const [exportMois, setExportMois] = useState(moisCourant)
+  const [exporting, setExporting] = useState(false)
 
-  const { data: expirants = [] } = useQuery({
-    queryKey: ['contrats-expirants'],
-    queryFn: contratService.expirants,
-  })
-
-  const { data: seances = [] } = useQuery({
-    queryKey: ['seances-toutes'],
-    queryFn: seanceService.listerTous,
-  })
+  const { data: vacataires = [] } = useQuery({ queryKey: ['vacataires'], queryFn: vacataireService.listerTous })
+  const { data: expirants  = [] } = useQuery({ queryKey: ['contrats-expirants'], queryFn: contratService.expirants })
+  const { data: seances    = [] } = useQuery({ queryKey: ['seances-toutes'], queryFn: seanceService.listerTous })
+  const { data: releves    = [] } = useQuery({ queryKey: ['releves-equipe'], queryFn: releveService.equipe })
 
   const totalVacataires = vacataires.length
   const profilsComplets = vacataires.filter((v) => v.profilComplet).length
-  const seancesSemaine = seances.filter((s) => s.statut === 'PROGRAMMEE').length
+  const seancesProgrammees = seances.filter((s) => s.statut === 'PROGRAMMEE').length
+
+  // Vacataires sans relevé soumis ou validé ce mois
+  const vacatairesSoumis = new Set(
+    releves
+      .filter((r) => r.periode === moisCourant && (r.statut === 'SOUMIS' || r.statut === 'VALIDE'))
+      .map((r) => r.nomVacataire)
+  )
+  const sansSoumission = vacataires.filter((v) => {
+    const nom = `${v.prenom} ${v.nom}`
+    return !vacatairesSoumis.has(nom)
+  })
+
+  const handleExportPdf = async () => {
+    setExporting(true)
+    try { await rapportService.telechargerRpMensuel(exportMois) }
+    finally { setExporting(false) }
+  }
 
   return (
     <div>
@@ -40,17 +54,41 @@ export default function ResponsableDashboard() {
             Gérez les dossiers vacataires, les contrats et l'emploi du temps.
           </p>
         </div>
-        <Link
-          href="/responsable/vacataires/nouveau"
-          className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold text-white"
-          style={{ background: '#C88500' }}
-        >
-          + Nouveau vacataire
-        </Link>
+        <div className="flex items-center gap-2">
+          {/* Export rapport mensuel */}
+          <div className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2">
+            <input
+              type="month"
+              value={exportMois}
+              onChange={(e) => setExportMois(e.target.value)}
+              className="text-xs text-gray-600 focus:outline-none"
+            />
+            <button
+              onClick={handleExportPdf}
+              disabled={exporting}
+              className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold text-white disabled:opacity-60 transition-opacity"
+              style={{ background: '#7A4010' }}
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              {exporting ? 'Export...' : 'Rapport PDF'}
+            </button>
+          </div>
+          <Link
+            href="/responsable/vacataires/nouveau"
+            className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold text-white"
+            style={{ background: '#C88500' }}
+          >
+            + Nouveau vacataire
+          </Link>
+        </div>
       </div>
 
       {/* KPIs */}
-      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
         {/* Vacataires */}
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-start justify-between">
@@ -61,17 +99,15 @@ export default function ResponsableDashboard() {
               </svg>
             </div>
             <Link href="/responsable/vacataires" className="rounded-full bg-orange-50 px-2 py-0.5 text-xs font-semibold text-ism-gold hover:bg-orange-100 transition-colors">
-              Voir tous →
+              Voir →
             </Link>
           </div>
           <p className="text-sm text-gray-500">Vacataires actifs</p>
           <p className="mt-1 text-4xl font-bold text-gray-900">{totalVacataires}</p>
-          <p className="mt-1 text-xs text-gray-400">
-            {profilsComplets} profil{profilsComplets !== 1 ? 's' : ''} complet{profilsComplets !== 1 ? 's' : ''}
-          </p>
+          <p className="mt-1 text-xs text-gray-400">{profilsComplets} profil{profilsComplets !== 1 ? 's' : ''} complet{profilsComplets !== 1 ? 's' : ''}</p>
         </div>
 
-        {/* Séances semaine */}
+        {/* Séances programmées */}
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-start justify-between">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50">
@@ -86,8 +122,30 @@ export default function ResponsableDashboard() {
             </Link>
           </div>
           <p className="text-sm text-gray-500">Séances programmées</p>
-          <p className="mt-1 text-4xl font-bold text-gray-900">{seancesSemaine}</p>
+          <p className="mt-1 text-4xl font-bold text-gray-900">{seancesProgrammees}</p>
           <p className="mt-1 text-xs text-gray-400">en attente de validation</p>
+        </div>
+
+        {/* Vacataires sans relevé soumis */}
+        <div className={`rounded-2xl p-5 shadow-sm ${sansSoumission.length > 0 ? 'border-2 border-blue-200 bg-blue-50' : 'bg-white'}`}>
+          <div className="mb-3 flex items-center gap-2">
+            <svg className={`h-5 w-5 ${sansSoumission.length > 0 ? 'text-blue-500' : 'text-ism-gold'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+            </svg>
+            <span className={`text-sm font-bold ${sansSoumission.length > 0 ? 'text-blue-700' : 'text-ism-gold'}`}>
+              Sans relevé soumis
+            </span>
+          </div>
+          {sansSoumission.length > 0 ? (
+            <>
+              <p className="text-3xl font-bold text-blue-700">{sansSoumission.length}</p>
+              <p className="mt-1 text-xs text-blue-600">vacataire{sansSoumission.length !== 1 ? 's' : ''} sans relevé ce mois</p>
+            </>
+          ) : (
+            <p className="text-sm text-gray-600">Tous les vacataires ont soumis leur relevé.</p>
+          )}
         </div>
 
         {/* Contrats expirants */}
@@ -105,28 +163,27 @@ export default function ResponsableDashboard() {
           {expirants.length > 0 ? (
             <>
               <p className="text-3xl font-bold text-amber-700">{expirants.length}</p>
-              <p className="mt-1 text-xs text-amber-600">contrat{expirants.length !== 1 ? 's' : ''} expire{expirants.length !== 1 ? 'nt' : ''} dans 30 jours</p>
-              <Link href="/responsable/vacataires" className="mt-3 inline-flex items-center text-xs font-semibold text-amber-700 hover:text-amber-900 transition-colors">
-                Voir les dossiers →
+              <p className="mt-1 text-xs text-amber-600">expirent dans 30 jours</p>
+              <Link href="/responsable/contrats" className="mt-2 inline-flex items-center text-xs font-semibold text-amber-700 hover:text-amber-900 transition-colors">
+                Voir les contrats →
               </Link>
             </>
           ) : (
-            <>
-              <p className="text-sm text-gray-600">Aucun contrat n'expire dans les 30 prochains jours.</p>
-            </>
+            <p className="text-sm text-gray-600">Aucun contrat n'expire prochainement.</p>
           )}
         </div>
       </div>
 
-      {/* Accès rapides */}
+      {/* Accès rapides + liste contrats expirants */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <h3 className="mb-3 text-sm font-bold text-gray-900">Accès rapides</h3>
           <div className="space-y-2">
             {[
-              { label: 'Dossiers vacataires', href: '/responsable/vacataires', desc: 'Gérer les profils et contrats' },
-              { label: "Relevés d'heures", href: '/responsable/releves', desc: 'Superviser et répondre aux demandes' },
-              { label: 'Emploi du temps', href: '/responsable/emploi-du-temps', desc: 'Planifier les séances' },
+              { label: 'Dossiers vacataires',    href: '/responsable/vacataires',     desc: 'Gérer les profils et signatures' },
+              { label: 'Contrats',               href: '/responsable/contrats',        desc: 'Créer et suivre les contrats' },
+              { label: "Relevés d'heures",       href: '/responsable/releves',         desc: 'Superviser et valider les relevés' },
+              { label: 'Emploi du temps',        href: '/responsable/emploi-du-temps', desc: 'Planifier les séances' },
             ].map((item) => (
               <Link
                 key={item.href}

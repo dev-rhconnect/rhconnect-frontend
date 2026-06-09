@@ -2,9 +2,43 @@
 
 import Link from 'next/link'
 import { useAuthStore } from '@/store/auth.store'
+import { useQuery } from '@tanstack/react-query'
+import { contratService } from '@/services/contrat.service'
+import { releveService } from '@/services/releve.service'
+
+const STATUT_LABEL: Record<string, { label: string; color: string; bg: string }> = {
+  EN_COURS: { label: 'En cours',  color: '#C88500', bg: '#FFF8E1' },
+  SOUMIS:   { label: 'Soumis',    color: '#1976D2', bg: '#E3F2FD' },
+  VALIDE:   { label: 'Validé',    color: '#2E7D32', bg: '#E8F5E9' },
+  REJETE:   { label: 'Rejeté',    color: '#C62828', bg: '#FFEBEE' },
+}
 
 export default function VacataireDashboard() {
   const { user } = useAuthStore()
+
+  const { data: contrats = [] } = useQuery({
+    queryKey: ['mon-contrat'],
+    queryFn: contratService.monContrat,
+  })
+
+  const { data: releves = [] } = useQuery({
+    queryKey: ['mes-releves'],
+    queryFn: releveService.mesReleves,
+  })
+
+  const contratActif = contrats.find((c) => c.statut === 'ACTIF') ?? contrats[0] ?? null
+  const volumePrevu  = contratActif?.volumeHorairePrevisionnel ?? 0
+
+  // Total heures validées sur tous les relevés
+  const heuresEffectuees = releves.reduce((sum, r) => sum + (r.totalHeuresValidees ?? 0), 0)
+  const progression = volumePrevu > 0 ? Math.min(100, Math.round((heuresEffectuees / volumePrevu) * 100)) : 0
+
+  // Dernier relevé soumis
+  const dernierReleve = [...releves]
+    .sort((a, b) => (b.dateSoumission ?? '').localeCompare(a.dateSoumission ?? ''))
+    .find((r) => r.statut !== 'EN_COURS') ?? releves[releves.length - 1] ?? null
+
+  const statutInfo = dernierReleve ? (STATUT_LABEL[dernierReleve.statut] ?? null) : null
 
   return (
     <div>
@@ -14,7 +48,9 @@ export default function VacataireDashboard() {
             Bonjour, {user?.prenom ?? 'Vacataire'}
           </h2>
           <p className="mt-1 text-sm text-gray-500">
-            Consultez votre contrat, vos heures effectuées et vos fiches de paie.
+            {contratActif
+              ? `Contrat actif : ${contratActif.module} — ${contratActif.classe}`
+              : 'Consultez votre contrat, vos heures effectuées et vos fiches de paie.'}
           </p>
         </div>
         <Link
@@ -26,19 +62,33 @@ export default function VacataireDashboard() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {/* Heures contractuelles */}
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-start justify-between">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50">
               <svg className="h-5 w-5 text-ism-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
               </svg>
             </div>
-            <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-600">Actif</span>
+            {contratActif && (
+              <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-semibold text-green-600">Actif</span>
+            )}
           </div>
           <p className="text-sm text-gray-500">Heures contractuelles</p>
-          <p className="mt-1 text-4xl font-bold text-gray-900">— h</p>
+          <p className="mt-1 text-4xl font-bold text-gray-900">
+            {volumePrevu > 0 ? `${volumePrevu} h` : '— h'}
+          </p>
+          {contratActif && (
+            <p className="mt-1 text-xs text-gray-400">
+              Taux : {contratActif.tauxHoraire ? `${contratActif.tauxHoraire.toLocaleString('fr-FR')} FCFA/h` : '—'}
+            </p>
+          )}
         </div>
 
+        {/* Heures effectuées vs volume prévu */}
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <div className="mb-4 flex items-start justify-between">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50">
@@ -46,27 +96,83 @@ export default function VacataireDashboard() {
                 <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
               </svg>
             </div>
-            <span className="rounded-full bg-orange-50 px-2 py-0.5 text-xs font-semibold text-ism-gold">Ce semestre</span>
+            <span className="rounded-full bg-orange-50 px-2 py-0.5 text-xs font-semibold text-ism-gold">
+              {progression} %
+            </span>
           </div>
           <p className="text-sm text-gray-500">Heures effectuées</p>
-          <p className="mt-1 text-4xl font-bold text-gray-900">— h</p>
+          <p className="mt-1 text-4xl font-bold text-gray-900">{heuresEffectuees.toFixed(1)} h</p>
           <div className="mt-3 h-2 w-full rounded-full bg-gray-100">
-            <div className="h-2 rounded-full bg-ism-gold" style={{ width: '0%' }} />
+            <div
+              className="h-2 rounded-full transition-all duration-500"
+              style={{
+                width: `${progression}%`,
+                background: progression >= 100 ? '#2E7D32' : '#C88500',
+              }}
+            />
           </div>
+          {volumePrevu > 0 && (
+            <p className="mt-1 text-xs text-gray-400">
+              {heuresEffectuees.toFixed(1)} / {volumePrevu} h prévues
+            </p>
+          )}
         </div>
 
-        <div className="rounded-2xl border-2 border-orange-200 bg-white p-5">
+        {/* Statut dernier relevé */}
+        <div
+          className="rounded-2xl p-5 shadow-sm"
+          style={statutInfo ? { background: statutInfo.bg, border: `2px solid ${statutInfo.color}40` } : { background: 'white' }}
+        >
           <div className="mb-3 flex items-center gap-2">
-            <svg className="h-5 w-5 text-ism-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            <svg className="h-5 w-5" style={{ color: statutInfo?.color ?? '#C88500' }} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="9 11 12 14 22 4" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
-            <span className="text-sm font-bold text-ism-gold">Mes rémunérations</span>
+            <span className="text-sm font-bold" style={{ color: statutInfo?.color ?? '#C88500' }}>
+              Dernier relevé
+            </span>
           </div>
-          <p className="text-sm text-gray-700">
-            Vos fiches de paie disponibles seront accessibles ici dès validation.
-          </p>
-          <Link href="/vacataire/fiches-paie" className="mt-4 inline-flex items-center text-sm font-semibold text-gray-900 hover:text-ism-gold transition-colors">
-            Voir mes fiches de paie →
+          {dernierReleve ? (
+            <>
+              <p className="text-sm font-semibold text-gray-800">{dernierReleve.module}</p>
+              <p className="mt-1 text-xs text-gray-500">{dernierReleve.periode} — {dernierReleve.totalHeuresValidees.toFixed(1)} h</p>
+              <span
+                className="mt-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-bold"
+                style={{ background: statutInfo?.color ?? '#C88500', color: 'white' }}
+              >
+                {statutInfo?.label ?? dernierReleve.statut}
+              </span>
+            </>
+          ) : (
+            <p className="text-sm text-gray-600">Aucun relevé soumis pour le moment.</p>
+          )}
+          <Link href="/vacataire/releves" className="mt-4 inline-flex items-center text-xs font-semibold text-gray-900 hover:text-ism-gold transition-colors">
+            Voir mes relevés →
+          </Link>
+        </div>
+      </div>
+
+      {/* Accès rapide rémunérations */}
+      <div className="mt-4 rounded-2xl border border-orange-100 bg-white p-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50">
+              <svg className="h-5 w-5 text-ism-gold" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="1" x2="12" y2="23" />
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-bold text-gray-900">Mes rémunérations</p>
+              <p className="text-xs text-gray-400">Fiches de paie disponibles après validation</p>
+            </div>
+          </div>
+          <Link
+            href="/vacataire/fiches-paie"
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors hover:opacity-90"
+            style={{ background: '#C88500' }}
+          >
+            Voir mes fiches →
           </Link>
         </div>
       </div>
