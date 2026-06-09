@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { releveService, type FeuilleHeureResponse } from '@/services/releve.service'
+import { paiementService } from '@/services/paiement.service'
 
 const statutConfig = {
   EN_COURS:  { label: 'En cours',    className: 'bg-gray-100 text-gray-600' },
@@ -16,6 +17,7 @@ export default function FinanceValidationsPage() {
   const [selected, setSelected] = useState<FeuilleHeureResponse | null>(null)
   const [motif, setMotif] = useState('')
   const [action, setAction] = useState<'valider' | 'rejeter' | null>(null)
+  const [exporting, setExporting] = useState(false)
 
   const { data: releves = [], isLoading, isError } = useQuery({
     queryKey: ['releves-soumis'],
@@ -61,11 +63,29 @@ export default function FinanceValidationsPage() {
   return (
     <div>
       {/* En-tête */}
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Validation des relevés</h2>
-        <p className="mt-1 text-sm text-gray-500">
-          {releves.length} relevé{releves.length !== 1 ? 's' : ''} en attente de validation
-        </p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Validation des relevés</h2>
+          <p className="mt-1 text-sm text-gray-500">
+            {releves.length} relevé{releves.length !== 1 ? 's' : ''} en attente de validation
+          </p>
+        </div>
+        <button
+          onClick={async () => {
+            setExporting(true)
+            try { await paiementService.exporterBC365() } finally { setExporting(false) }
+          }}
+          disabled={exporting}
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50 transition-colors"
+          style={{ background: '#1C6E3D' }}
+        >
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          {exporting ? 'Export…' : 'Exporter BC365 (CSV)'}
+        </button>
       </div>
 
       {/* KPI */}

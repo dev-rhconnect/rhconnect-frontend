@@ -72,5 +72,8 @@ export const releveService = {
     api.patch<FeuilleHeureResponse>(`/releves/${id}/valider`).then((r) => r.data),
 
   rejeter: (id: number, motif: string) =>
-    api.patch<FeuilleHeureResponse>(`/releves/${id}/rejeter`, { motif }).then((r) => r.data),
+    api.patch<FeuilleHeureResponse>(`/releves/${id}/rejeter`, null, { params: { motif } }).then((r) => r.data),
+
+  repondreExplication: (id: number, reponse: string) =>
+    api.patch<FeuilleHeureResponse>(`/releves/${id}/reponse-explication`, null, { params: { reponse } }).then((r) => r.data),
 }
