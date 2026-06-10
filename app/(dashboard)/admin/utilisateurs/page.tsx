@@ -146,6 +146,7 @@ export default function AdminUtilisateursPage() {
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
+  const [erreur, setErreur] = useState<string | null>(null)
 
   const { data: tous = [], isLoading, isError } = useQuery({
     queryKey: ['utilisateurs-admin'],
@@ -159,6 +160,11 @@ export default function AdminUtilisateursPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['utilisateurs-admin'] })
       setShowCreate(false)
+      setErreur(null)
+    },
+    onError: (e: unknown) => {
+      const msg = (e as { response?: { data?: { message?: string } } })?.response?.data?.message
+      setErreur(msg ?? 'Une erreur est survenue. Vérifiez que le backend est démarré.')
     },
   })
 
@@ -362,10 +368,23 @@ export default function AdminUtilisateursPage() {
         )}
       </div>
 
+      {erreur && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-start gap-3 rounded-2xl bg-red-50 border border-red-200 px-5 py-4 shadow-lg max-w-sm">
+          <svg className="mt-0.5 h-5 w-5 shrink-0 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-red-700">Échec de la création</p>
+            <p className="mt-0.5 text-xs text-red-600">{erreur}</p>
+          </div>
+          <button onClick={() => setErreur(null)} className="text-red-400 hover:text-red-600">
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          </button>
+        </div>
+      )}
+
       {showCreate && (
         <CreateCompteModal
           saving={creating}
-          onClose={() => setShowCreate(false)}
+          onClose={() => { setShowCreate(false); setErreur(null) }}
           onConfirm={(data) => creer(data)}
         />
       )}
