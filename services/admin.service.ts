@@ -41,6 +41,11 @@ export const adminService = {
   desactiver: (id: number) =>
     api.patch(`/admin/utilisateurs/${id}/desactiver`).then((r) => r.data),
 
+  reinitialiserMdp: (id: number, nouveauMdp?: string) =>
+    api.patch(`/admin/utilisateurs/${id}/reinitialiser-mdp`, null, {
+      params: nouveauMdp?.trim() ? { nouveauMdp } : undefined,
+    }).then((r) => r.data),
+
   logs: () =>
     api.get<AuditLog[]>('/admin/logs').then((r) => r.data),
 }

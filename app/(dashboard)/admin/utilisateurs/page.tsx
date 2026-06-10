@@ -168,6 +168,11 @@ export default function AdminUtilisateursPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['utilisateurs-admin'] }),
   })
 
+  const { mutate: resetMdp, isPending: resetting } = useMutation({
+    mutationFn: (id: number) => adminService.reinitialiserMdp(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['utilisateurs-admin'] }),
+  })
+
   const filtered = utilisateurs.filter((u) => {
     const q = search.toLowerCase()
     return (
@@ -328,16 +333,26 @@ export default function AdminUtilisateursPage() {
                       )}
                     </td>
                     <td className="px-5 py-4 text-right">
-                      <button
-                        onClick={() => toggleActif({ id: u.id, actif: u.actif })}
-                        className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-                          u.actif
-                            ? 'text-red-500 hover:bg-red-50'
-                            : 'text-green-600 hover:bg-green-50'
-                        }`}
-                      >
-                        {u.actif ? 'Désactiver' : 'Activer'}
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => resetMdp(u.id)}
+                          disabled={resetting}
+                          title="Réinitialiser le mot de passe à Rhconnect@ISM2026"
+                          className="rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                        >
+                          Réinit. MDP
+                        </button>
+                        <button
+                          onClick={() => toggleActif({ id: u.id, actif: u.actif })}
+                          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                            u.actif
+                              ? 'text-red-500 hover:bg-red-50'
+                              : 'text-green-600 hover:bg-green-50'
+                          }`}
+                        >
+                          {u.actif ? 'Désactiver' : 'Activer'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 )
