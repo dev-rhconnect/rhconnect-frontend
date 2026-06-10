@@ -120,7 +120,12 @@ function CreateCompteModal({
             Annuler
           </button>
           <button
-            onClick={() => valid && onConfirm(form)}
+            onClick={() => {
+              if (!valid) return
+              const payload = { ...form }
+              if (!payload.motDePasseTemporaire?.trim()) delete payload.motDePasseTemporaire
+              onConfirm(payload)
+            }}
             disabled={!valid || saving}
             className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-colors disabled:opacity-50"
             style={{ background: '#C88500' }}
