@@ -91,6 +91,9 @@ export default function AttacheRelevesPage() {
             <tbody>
               {releves.map((r, i) => {
                 const cfg = statutConfig[r.statut]
+                const totalHeures = r.statut === 'VALIDE'
+                  ? r.totalHeuresValidees
+                  : r.lignes.reduce((sum, l) => sum + (l.duree ?? 0), 0)
                 return (
                   <tr key={r.id} className={`hover:bg-gray-50 transition-colors ${i === releves.length - 1 ? '' : 'border-b border-gray-50'}`}>
                     <td className="px-5 py-4 font-medium text-gray-900">{r.nomVacataire}</td>
@@ -101,7 +104,7 @@ export default function AttacheRelevesPage() {
                     <td className="px-5 py-4 text-gray-600">{r.periode}</td>
                     <td className="px-5 py-4 text-right text-gray-600">{r.lignes.length}</td>
                     <td className="px-5 py-4 text-right font-semibold text-gray-900">
-                      {r.totalHeuresValidees.toFixed(1)} h
+                      {totalHeures.toFixed(1)} h
                     </td>
                     <td className="px-5 py-4">
                       <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${cfg.className}`}>

@@ -60,6 +60,9 @@ export const seanceService = {
       params: motif ? { motif } : undefined,
     }).then((r) => r.data),
 
+  realiseesPourPeriode: (contratId: number, periode: string) =>
+    api.get<SeanceProgrammeeResponse[]>('/seances/realisees', { params: { contratId, periode } }).then((r) => r.data),
+
   uploadFeuillePresence: (id: number, file: File) => {
     const form = new FormData()
     form.append('file', file)

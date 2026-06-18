@@ -22,6 +22,7 @@ export interface FeuilleHeureResponse {
   periode: string
   totalHeuresValidees: number
   volumeHorairePrevisionnel?: number
+  tauxHoraire?: number
   statut: StatutReleve
   dateSoumission?: string
   dateValidation?: string
@@ -76,4 +77,7 @@ export const releveService = {
 
   repondreExplication: (id: number, reponse: string) =>
     api.patch<FeuilleHeureResponse>(`/releves/${id}/reponse-explication`, null, { params: { reponse } }).then((r) => r.data),
+
+  importerSeances: (feuilleId: number, seanceIds: number[]) =>
+    api.post<LigneHeureResponse[]>(`/releves/${feuilleId}/importer-seances`, seanceIds).then((r) => r.data),
 }

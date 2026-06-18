@@ -33,28 +33,40 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <header className="flex h-16 flex-shrink-0 items-center gap-4 border-b border-gray-100 bg-white px-6">
+        <header
+          className="flex h-[68px] flex-shrink-0 items-center gap-4 border-b px-8 z-20"
+          style={{
+            background: 'rgba(253,242,236,0.88)',
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            borderColor: '#F1E2D4',
+          }}
+        >
           {/* Search */}
-          <div className="relative flex-1 max-w-md">
-            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-            </span>
+          <div className="flex items-center gap-2.5 rounded-3xl border bg-white px-4 py-2.5 w-72 transition-all focus-within:border-ism-gold" style={{ borderColor: '#E7D3C1' }}>
+            <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#8A7256' }}>
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
             <input
               type="search"
-              placeholder="Rechercher..."
-              className="w-full rounded-full bg-gray-100 py-2 pl-9 pr-4 text-sm text-gray-700 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-ism-gold/40"
+              placeholder="Rechercher un vacataire, module…"
+              className="w-full bg-transparent text-sm focus:outline-none"
+              style={{ color: '#2B1D10' }}
             />
           </div>
 
           {/* Actions */}
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-2">
             {/* Cloche notifications */}
             <NotificationBell />
 
             {/* Paramètres */}
-            <button className="rounded-full p-2 text-gray-500 hover:bg-gray-100 transition-colors">
+            <button
+              className="flex h-[42px] w-[42px] items-center justify-center rounded-xl border bg-white transition-colors"
+              style={{ borderColor: '#E7D3C1', color: '#5C4A38' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#C88500'; (e.currentTarget as HTMLElement).style.color = '#C88500' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#E7D3C1'; (e.currentTarget as HTMLElement).style.color = '#5C4A38' }}
+            >
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="3" />
                 <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
@@ -62,13 +74,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </button>
 
             {/* Avatar + rôle */}
-            <div className="ml-1 flex items-center gap-2">
-              <div className="text-right hidden sm:block">
-                <p className="text-xs font-semibold text-gray-900">{user.prenom} {user.nom}</p>
-                <p className="text-xs text-gray-400">{roleLabel[user.role]}</p>
-              </div>
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ism-900 text-xs font-bold text-ism-gold ring-2 ring-ism-gold/20 cursor-pointer">
+            <div
+              className="ml-1 flex items-center gap-2.5 cursor-pointer rounded-3xl border px-2 py-1.5 transition-colors"
+              style={{ borderColor: 'transparent' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#F1E2D4'; (e.currentTarget as HTMLElement).style.background = '#fff' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'transparent'; (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+            >
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ism-900 text-xs font-bold text-ism-gold">
                 {initials}
+              </div>
+              <div className="text-right hidden sm:block pr-1">
+                <p className="text-[13px] font-bold leading-tight" style={{ color: '#2B1D10' }}>{user.prenom} {user.nom}</p>
+                <p className="text-[11px]" style={{ color: '#8A7256' }}>{roleLabel[user.role]}</p>
               </div>
             </div>
           </div>
@@ -120,7 +137,10 @@ function NotificationBell() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOuvert((o) => !o)}
-        className="relative rounded-full p-2 text-gray-500 hover:bg-gray-100 transition-colors"
+        className="relative flex h-[42px] w-[42px] items-center justify-center rounded-xl border bg-white transition-colors"
+        style={{ borderColor: '#E7D3C1', color: '#5C4A38' }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#C88500'; (e.currentTarget as HTMLElement).style.color = '#C88500' }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#E7D3C1'; (e.currentTarget as HTMLElement).style.color = '#5C4A38' }}
       >
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />

@@ -80,17 +80,20 @@ export default function NouveauVacatairePage() {
   return (
     <div className="mx-auto max-w-3xl">
       {/* Fil d'ariane */}
-      <div className="mb-6 flex items-center gap-2 text-sm text-gray-500">
-        <Link href="/responsable/vacataires" className="hover:text-gray-800 transition-colors">
+      <div className="mb-6 flex items-center gap-2 text-sm" style={{ color: '#8A7256' }}>
+        <Link href="/responsable/vacataires" className="transition-colors hover:text-ism-ink" style={{ color: '#8A7256' }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#2B1D10' }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#8A7256' }}
+        >
           Dossiers vacataires
         </Link>
         <span>/</span>
-        <span className="text-gray-900 font-medium">Nouveau dossier</span>
+        <span className="font-medium" style={{ color: '#2B1D10' }}>Nouveau dossier</span>
       </div>
 
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Nouveau dossier vacataire</h2>
-        <p className="mt-1 text-sm text-gray-500">
+        <h2 className="text-2xl font-extrabold" style={{ color: '#2B1D10', letterSpacing: '-0.015em' }}>Nouveau dossier vacataire</h2>
+        <p className="mt-1 text-sm" style={{ color: '#8A7256' }}>
           Remplissez les informations PR01. Un compte sera créé automatiquement avec un mot de passe temporaire.
         </p>
       </div>
@@ -216,7 +219,10 @@ export default function NouveauVacatairePage() {
         <div className="flex items-center justify-end gap-3 pt-2 pb-8">
           <Link
             href="/responsable/vacataires"
-            className="rounded-xl px-5 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors"
+            className="rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors"
+            style={{ color: '#5C4A38' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = '#FCF5EE' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
           >
             Annuler
           </Link>
@@ -238,8 +244,8 @@ export default function NouveauVacatairePage() {
 
 function inputCls(hasError: boolean) {
   return `w-full rounded-xl border ${
-    hasError ? 'border-red-400' : 'border-gray-200'
-  } bg-white px-3.5 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:border-amber-400 transition-colors`
+    hasError ? 'border-red-400' : 'border-[#E7D3C1]'
+  } bg-white px-3.5 py-2.5 text-sm text-[#2B1D10] placeholder-[#B6A189] focus:outline-none focus:border-[#C88500] transition-colors`
 }
 
 function FormSection({
@@ -254,14 +260,14 @@ function FormSection({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-2xl bg-white p-6 shadow-sm">
+    <div className="rounded-2xl bg-white p-6" style={{ border: '1px solid #F1E2D4', boxShadow: '0 1px 2px rgba(61,31,0,.05)' }}>
       <div className="mb-5 flex items-start gap-3">
-        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-orange-50 text-ism-gold">
+        <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl" style={{ background: '#F7E6C9', color: '#C88500' }}>
           {icon}
         </div>
         <div>
-          <h3 className="text-sm font-bold text-gray-900">{title}</h3>
-          <p className="text-xs text-gray-400">{subtitle}</p>
+          <h3 className="text-sm font-bold" style={{ color: '#2B1D10' }}>{title}</h3>
+          <p className="text-xs" style={{ color: '#8A7256' }}>{subtitle}</p>
         </div>
       </div>
       <div className="space-y-4">{children}</div>
@@ -284,11 +290,11 @@ function Field({
 }) {
   return (
     <div>
-      <label className="mb-1.5 block text-sm font-medium text-gray-700">
+      <label className="mb-1.5 block text-sm font-medium" style={{ color: '#2B1D10' }}>
         {label}
         {required && <span className="ml-0.5 text-red-500">*</span>}
       </label>
-      {hint && <p className="mb-1.5 text-xs text-gray-400">{hint}</p>}
+      {hint && <p className="mb-1.5 text-xs" style={{ color: '#8A7256' }}>{hint}</p>}
       {children}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>

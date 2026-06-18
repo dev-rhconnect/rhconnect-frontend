@@ -65,11 +65,10 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="flex h-full w-60 flex-shrink-0 flex-col border-r border-gray-100 bg-white">
+    <aside className="flex h-full w-64 flex-shrink-0 flex-col border-r bg-ism-cream" style={{ borderColor: '#F1E2D4' }}>
       {/* Logo */}
-      <div className="flex items-center gap-3 border-b border-gray-100 px-5 py-5">
-        {/* Icône réseau RHConnect */}
-        <svg viewBox="0 0 240 295" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-9 w-8 flex-shrink-0">
+      <div className="flex items-center gap-3 border-b px-5 py-5" style={{ borderColor: '#F1E2D4' }}>
+        <svg viewBox="0 0 240 295" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-10 w-9 flex-shrink-0 rounded-xl shadow-sm">
           <polygon points="120,80 176,113 176,178 120,210 64,178 64,113" fill="none" stroke="#7A4010" strokeWidth="9" strokeLinejoin="round" />
           <circle cx="120" cy="145" r="11" fill="#7A4010" />
           <circle cx="120" cy="34" r="25" fill="#EDA832" />
@@ -82,15 +81,15 @@ export default function Sidebar() {
           <path d="M93,264 Q120,252 147,264 L143,283 L97,283 Z" fill="#EDA832" />
         </svg>
         <div>
-          <p className="text-sm font-black" style={{ color: '#EDA832' }}>
-            RH<span style={{ color: '#C07820' }}>Connect</span>
+          <p className="text-lg font-black tracking-tight" style={{ color: '#2B1D10', fontFamily: 'inherit' }}>
+            RH<span style={{ color: '#C88500' }}>Connect</span>
           </p>
-          <p className="text-xs text-gray-400">Portail vacataires ISM</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#8A7256', marginTop: 2 }}>ISM · Vacataires</p>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-0.5 px-3 py-4">
+      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3.5 py-3">
         {items.map((item) => {
           const isActive = item.exact
             ? pathname === item.href
@@ -99,13 +98,26 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150 ${
                 isActive
-                  ? 'border-l-[3px] border-ism-gold bg-orange-50 pl-2.5 font-semibold text-ism-900'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  ? 'text-ism-ink'
+                  : 'hover:text-ism-ink'
               }`}
+              style={
+                isActive
+                  ? {
+                      background: '#EBA94E',
+                      color: '#2B1D10',
+                      boxShadow: '0 4px 12px -4px rgba(196,122,42,0.5)',
+                    }
+                  : {
+                      color: '#5C4A38',
+                    }
+              }
+              onMouseEnter={!isActive ? (e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.6)'; (e.currentTarget as HTMLElement).style.color = '#2B1D10' } : undefined}
+              onMouseLeave={!isActive ? (e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#5C4A38' } : undefined}
             >
-              <span className="h-4 w-4 flex-shrink-0">{item.icon}</span>
+              <span className="h-[19px] w-[19px] flex-shrink-0" style={{ opacity: isActive ? 1 : 0.8 }}>{item.icon}</span>
               {item.label}
             </Link>
           )
@@ -113,25 +125,36 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom actions */}
-      <div className="px-3 pb-4">
+      <div className="border-t px-3.5 pb-4 pt-3" style={{ borderColor: '#F1E2D4' }}>
         {newHref && (
           <Link
             href={newHref}
-            className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-ism-gold hover:bg-orange-50"
+            className="mb-1 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-bold transition-all"
+            style={{ background: '#fff', borderColor: '#E7D3C1', color: '#2B1D10' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#C88500'; (e.currentTarget as HTMLElement).style.color = '#C88500' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#E7D3C1'; (e.currentTarget as HTMLElement).style.color = '#2B1D10' }}
           >
-            + Nouveau Dossier
+            <span className="text-base leading-none">+</span> Nouveau Dossier
           </Link>
         )}
-        <div className="my-2 border-t border-gray-100" />
-        <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-800">
-          <span className="h-4 w-4"><HelpIcon /></span>
-          Aide
+        <div className="my-2" />
+        <button
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
+          style={{ color: '#5C4A38' }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#2B1D10' }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#5C4A38' }}
+        >
+          <span className="h-4 w-4 opacity-80"><HelpIcon /></span>
+          Aide & support
         </button>
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-800"
+          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
+          style={{ color: '#5C4A38' }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#2B1D10' }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#5C4A38' }}
         >
-          <span className="h-4 w-4"><LogoutIcon /></span>
+          <span className="h-4 w-4 opacity-80"><LogoutIcon /></span>
           Déconnexion
         </button>
       </div>
