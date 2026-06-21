@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  /* Marques historiques ISM */
+  --color-ism-950: #120600;
+  --color-ism-900: #1C0800;
+  --color-ism-800: #2D1000;
+  --color-ism-700: #3d1800;
+  --color-ism-gold: #C88500;
+  --color-ism-gold-light: #D4920F;
+
+  /* Système de design complet */
+  --color-ism-gold-pill: #EBA94E;
+  --color-ism-gold-100: #F7E6C9;
+  --color-ism-warm: #FDF2EC;
+  --color-ism-warm-dark: #FDECD8;
+  --color-ism-cream: #FBEADF;
+  --color-ism-header: #FBEFE4;
+  --color-ism-surface-sunk: #FCF5EE;
+  --color-ism-line: #F1E2D4;
+  --color-ism-line-2: #E7D3C1;
+  --color-ism-ink: #2B1D10;
+  --color-ism-ink-2: #5C4A38;
+  --color-ism-muted: #8A7256;
+
+  --font-sans: var(--font-poppins), 'Poppins', system-ui, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+}
