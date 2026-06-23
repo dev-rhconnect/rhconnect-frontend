@@ -14,6 +14,18 @@ type NouveauModuleLigne = { nomModule: string; classes: string[]; niveau: string
 
 const NIVEAUX = ['L1', 'L2', 'L3', 'MASTER', 'MASTER_1', 'MASTER_2', 'DUT']
 
+function deriveNiveauFromNom(classeNom: string): string {
+  const u = classeNom.toUpperCase()
+  if (u.includes('MASTER_2') || u.includes('MASTER2') || u.includes('M2')) return 'MASTER_2'
+  if (u.includes('MASTER_1') || u.includes('MASTER1') || u.includes('M1')) return 'MASTER_1'
+  if (u.includes('MASTER')) return 'MASTER'
+  if (u.includes('L3')) return 'L3'
+  if (u.includes('L2')) return 'L2'
+  if (u.includes('L1')) return 'L1'
+  if (u.includes('DUT')) return 'DUT'
+  return ''
+}
+
 /* ── Page principale ── */
 export default function DossierVacatairePage() {
   const params = useParams()
@@ -291,7 +303,7 @@ function NouveauContratModal({ vacataireId, vacataire, maquette, loadingMaquette
   const [tauxHoraire, setTauxHoraire] = useState(
     vacataire?.typeVacataire === 'PROFESSEUR_UNIVERSITAIRE' ? 25000 : 10000
   )
-  const [lignes, setLignes] = useState<NouveauModuleLigne[]>([{ nomModule: '', classes: [], niveau: 'L1', vhAuto: 0, troncCommun: false }])
+  const [lignes, setLignes] = useState<NouveauModuleLigne[]>([{ nomModule: '', classes: [], niveau: '', vhAuto: 0, troncCommun: false }])
   const [error, setError] = useState<string | null>(null)
 
   // Modules enregistrés dans le dossier vacataire (pré-filtrés)
@@ -301,9 +313,12 @@ function NouveauContratModal({ vacataireId, vacataire, maquette, loadingMaquette
     ? [...new Set(maquette.filter(m => modulesVacataire.includes(m.moduleNom)).map(m => m.moduleNom))].sort()
     : [...new Set(maquette.map(m => m.moduleNom))].sort()
 
-  // Classes disponibles pour un module donné (depuis la maquette)
-  const classesForModule = (nomModule: string) =>
-    [...new Set(maquette.filter(m => m.moduleNom === nomModule).map(m => m.classeNom))]
+  // Classes disponibles pour un module donné, filtrées par niveau si sélectionné
+  const classesForModule = (nomModule: string, niveauFiltre?: string) => {
+    const all = [...new Set(maquette.filter(m => m.moduleNom === nomModule).map(m => m.classeNom))]
+    if (!niveauFiltre) return all
+    return all.filter(c => deriveNiveauFromNom(c) === niveauFiltre)
+  }
 
   const updateLigne = (i: number, patch: Partial<NouveauModuleLigne>) => {
     setLignes(prev => prev.map((l, idx) => {
@@ -316,15 +331,16 @@ function NouveauContratModal({ vacataireId, vacataire, maquette, loadingMaquette
           const entry = maquette.find(m => m.moduleNom === nom && m.classeNom === c)
           return sum + (entry?.volumeHoraire ?? 0)
         }, 0)
-        // Reset tronc commun si on revient à 1 classe
+        // Auto-dériver le niveau depuis la première classe sélectionnée
+        const niveauDerive = cls.length > 0 ? (deriveNiveauFromNom(cls[0]) || updated.niveau) : updated.niveau
         const troncCommun = cls.length > 1 ? updated.troncCommun : false
-        return { ...updated, vhAuto, troncCommun }
+        return { ...updated, vhAuto, troncCommun, niveau: niveauDerive }
       }
       return updated
     }))
   }
 
-  const addLigne = () => setLignes(prev => [...prev, { nomModule: '', classes: [], niveau: 'L1', vhAuto: 0, troncCommun: false }])
+  const addLigne = () => setLignes(prev => [...prev, { nomModule: '', classes: [], niveau: '', vhAuto: 0, troncCommun: false }])
   const removeLigne = (i: number) => setLignes(prev => prev.filter((_, idx) => idx !== i))
 
   const { mutate: creer, isPending } = useMutation({
@@ -334,7 +350,7 @@ function NouveauContratModal({ vacataireId, vacataire, maquette, loadingMaquette
       const modules: ContratModuleRequest[] = modulesValides.map(l => ({
         nomModule: l.nomModule,
         classes: l.classes,
-        niveau: l.niveau as NiveauEnseignement,
+        niveau: (l.niveau || 'L1') as NiveauEnseignement,
         estTroncCommun: l.troncCommun,
       }))
       return contratService.creer({ vacataireId, modules, dateDebut, dateFin, tauxHoraire })
@@ -398,7 +414,7 @@ function NouveauContratModal({ vacataireId, vacataire, maquette, loadingMaquette
           {/* ── Lignes modules ── */}
           <div className="space-y-3">
             {lignes.map((ligne, i) => {
-              const disponibles = classesForModule(ligne.nomModule)
+              const disponibles = classesForModule(ligne.nomModule, ligne.niveau)
               return (
                 <div key={i} className="rounded-xl border border-gray-200 p-4 space-y-3">
                   <div className="flex items-center justify-between">
@@ -421,12 +437,13 @@ function NouveauContratModal({ vacataireId, vacataire, maquette, loadingMaquette
                       </select>
                     </div>
                     <div>
-                      <label className="mb-1 block text-xs font-medium text-gray-700">Niveau</label>
+                      <label className="mb-1 block text-xs font-medium text-gray-700">Filtre niveau</label>
                       <select
                         value={ligne.niveau}
-                        onChange={e => updateLigne(i, { niveau: e.target.value })}
+                        onChange={e => updateLigne(i, { niveau: e.target.value, classes: [] })}
                         className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-amber-400"
                       >
+                        <option value="">Tous les niveaux</option>
                         {NIVEAUX.map(n => <option key={n} value={n}>{n}</option>)}
                       </select>
                     </div>

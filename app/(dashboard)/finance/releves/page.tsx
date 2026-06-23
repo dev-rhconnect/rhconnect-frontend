@@ -1,240 +1,207 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { seanceService, type SeanceProgrammeeResponse } from '@/services/seance.service'
-import { vacataireService } from '@/services/vacataire.service'
-import { api } from '@/services/api'
+import { releveService, type FeuilleHeureResponse, type StatutReleve } from '@/services/releve.service'
 
-function moisCourant() {
-  const now = new Date()
-  return {
-    debut: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`,
-    fin: new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().slice(0, 10),
-  }
+function periodeLabel(p: string) {
+  const [y, m] = p.split('-')
+  return new Date(Number(y), Number(m) - 1, 1)
+    .toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
 }
 
-function formatDate(iso: string) {
-  return new Date(iso + 'T00:00:00').toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+const STATUT_COLORS: Record<StatutReleve, { bg: string; text: string; label: string }> = {
+  EN_COURS:       { bg: 'bg-gray-100',   text: 'text-gray-700',   label: 'En cours' },
+  SOUMIS:         { bg: 'bg-blue-50',    text: 'text-blue-700',   label: 'Soumis' },
+  SOUMIS_RP:      { bg: 'bg-blue-50',    text: 'text-blue-700',   label: 'Soumis au RP' },
+  VALIDE_RP:      { bg: 'bg-indigo-50',  text: 'text-indigo-700', label: 'Validé RP' },
+  SOUMIS_FINANCE: { bg: 'bg-amber-50',   text: 'text-amber-700',  label: 'En attente' },
+  VALIDE:         { bg: 'bg-green-50',   text: 'text-green-700',  label: 'Validé ✓' },
+  REJETE:         { bg: 'bg-red-50',     text: 'text-red-600',    label: 'Rejeté' },
 }
 
-function exportCSV(seances: SeanceProgrammeeResponse[], nom: string) {
-  const header = ['Date', 'Vacataire', 'Email', 'Module', 'Classe(s)', 'Type', 'Salle', 'Début', 'Fin', 'Durée (h)', 'Justification écart']
-  const rows = seances.map(s => [
-    s.dateSeance, s.nomVacataire, s.emailVacataire, s.module, s.classe,
-    s.typeSeance ?? '', s.salle ?? '',
-    s.heureDebut.slice(0, 5), s.heureFin.slice(0, 5),
-    s.duree.toFixed(2), s.justificationEcart ?? '',
+function BadgeStatut({ statut }: { statut: StatutReleve }) {
+  const s = STATUT_COLORS[statut] ?? STATUT_COLORS.EN_COURS
+  return (
+    <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.bg} ${s.text}`}>
+      {s.label}
+    </span>
+  )
+}
+
+function exportCSV(releves: FeuilleHeureResponse[], nom: string) {
+  const header = ['Période', 'Vacataire', 'Module', 'Classe', 'Statut', 'Séances', 'Heures validées', 'Taux', 'Montant estimé']
+  const rows = releves.map(r => [
+    r.periode, r.nomVacataire, r.module ?? '', r.classe ?? '', r.statut,
+    String(r.nombreSeances), r.totalHeuresValidees.toFixed(2),
+    r.tauxHoraire ? String(r.tauxHoraire) : '',
+    r.tauxHoraire ? (r.totalHeuresValidees * r.tauxHoraire).toFixed(0) : '',
   ])
   const csv = [header, ...rows].map(r => r.map(v => `"${v}"`).join(';')).join('\n')
   const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
-  a.download = `${nom}_${new Date().toISOString().slice(0, 10)}.csv`
+  a.download = `releves_valides_${nom}_${new Date().toISOString().slice(0, 10)}.csv`
   a.click()
   URL.revokeObjectURL(url)
 }
 
 export default function FinanceRelevesPage() {
-  const { debut: debutDefaut, fin: finDefaut } = moisCourant()
-  const [vacataireId, setVacataireId] = useState<number | ''>('')
-  const [classeNom, setClasseNom] = useState('')
-  const [debut, setDebut] = useState(debutDefaut)
-  const [fin, setFin] = useState(finDefaut)
+  const [filtreStatut, setFiltreStatut] = useState<StatutReleve | 'TOUS'>('TOUS')
+  const [filtreVacataire, setFiltreVacataire] = useState('')
 
-  const { data: vacataires = [] } = useQuery({
-    queryKey: ['vacataires'],
-    queryFn: vacataireService.listerTous,
+  const { data: tous = [], isLoading } = useQuery({
+    queryKey: ['releves-finance-historique'],
+    queryFn: releveService.soumisFinance,
   })
 
-  const { data: maquette = [] } = useQuery({
-    queryKey: ['maquette'],
-    queryFn: () => api.get<{ classeNom: string }[]>('/maquette').then(r => r.data),
+  const releves = tous.filter(r => {
+    if (filtreStatut !== 'TOUS' && r.statut !== filtreStatut) return false
+    if (filtreVacataire && !r.nomVacataire.toLowerCase().includes(filtreVacataire.toLowerCase())) return false
+    return true
   })
 
-  const classes = useMemo(() =>
-    [...new Set(maquette.map((m: { classeNom: string }) => m.classeNom))].sort(), [maquette]
-  )
+  const totalValides = tous.filter(r => r.statut === 'VALIDE').length
+  const totalHeures  = tous.filter(r => r.statut === 'VALIDE').reduce((s, r) => s + r.totalHeuresValidees, 0)
+  const totalMontant = tous.filter(r => r.statut === 'VALIDE' && r.tauxHoraire)
+    .reduce((s, r) => s + r.totalHeuresValidees * (r.tauxHoraire ?? 0), 0)
 
-  const { data: seances = [], isLoading } = useQuery({
-    queryKey: ['releve-finance', vacataireId, classeNom, debut, fin],
-    queryFn: () => seanceService.releve({
-      ...(vacataireId !== '' ? { vacataireId: vacataireId as number } : {}),
-      ...(classeNom ? { classeNom } : {}),
-      ...(debut ? { debut } : {}),
-      ...(fin ? { fin } : {}),
-    }),
-  })
-
-  const parVacataire = useMemo(() => {
-    const map = new Map<string, { seances: SeanceProgrammeeResponse[]; totalH: number; ecarts: number }>()
-    for (const s of seances) {
-      const k = s.nomVacataire
-      const entry = map.get(k) ?? { seances: [], totalH: 0, ecarts: 0 }
-      entry.seances.push(s)
-      entry.totalH += s.duree
-      if (s.justificationEcart) entry.ecarts++
-      map.set(k, entry)
-    }
-    return map
-  }, [seances])
-
-  const totalHeures = seances.reduce((s, x) => s + x.duree, 0)
-  const totalEcarts = seances.filter(s => s.justificationEcart).length
-
-  const nomExport = [
-    vacataireId !== '' ? (vacataires.find(v => v.id === vacataireId)?.nom ?? 'vacataire') : 'tous',
-    classeNom || 'toutes-classes', debut, fin,
-  ].join('_')
+  const vacatairesUniques = [...new Set(tous.map(r => r.nomVacataire))].sort()
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Relevés d'heures</h2>
-          <p className="mt-1 text-sm text-gray-500">Séances validées (REALISÉE) — pour traitement paiement</p>
+          <h2 className="text-2xl font-bold text-gray-900">Relevés — historique</h2>
+          <p className="mt-1 text-sm text-gray-500">Relevés transmis au Finance (en attente, validés, rejetés)</p>
         </div>
         <button
-          onClick={() => exportCSV(seances, nomExport)}
-          disabled={seances.length === 0}
-          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+          onClick={() => exportCSV(releves, filtreVacataire || 'tous')}
+          disabled={releves.length === 0}
+          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 shadow-sm"
         >
-          ↓ Exporter CSV
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Exporter CSV
         </button>
-      </div>
-
-      {/* Filtres */}
-      <div className="rounded-2xl bg-white p-5 shadow-sm">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-gray-500">Filtres</p>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-700">Vacataire</label>
-            <select
-              value={vacataireId}
-              onChange={e => setVacataireId(e.target.value ? Number(e.target.value) : '')}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 bg-white"
-            >
-              <option value="">Tous</option>
-              {vacataires.map(v => <option key={v.id} value={v.id}>{v.prenom} {v.nom}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-700">Classe</label>
-            <select
-              value={classeNom}
-              onChange={e => setClasseNom(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400 bg-white"
-            >
-              <option value="">Toutes</option>
-              {classes.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-700">Du</label>
-            <input type="date" value={debut} onChange={e => setDebut(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400" />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-gray-700">Au</label>
-            <input type="date" value={fin} onChange={e => setFin(e.target.value)}
-              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:border-amber-400" />
-          </div>
-        </div>
-        <div className="mt-3 flex gap-2">
-          {[
-            { label: 'Ce mois', ...moisCourant() },
-            { label: 'Mois préc.', debut: (() => { const d = new Date(); d.setMonth(d.getMonth()-1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01` })(), fin: (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 0).toISOString().slice(0,10) })() },
-            { label: 'Cette année', debut: `${new Date().getFullYear()}-01-01`, fin: `${new Date().getFullYear()}-12-31` },
-          ].map(p => (
-            <button key={p.label} onClick={() => { setDebut(p.debut); setFin(p.fin) }}
-              className="rounded-lg border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50">
-              {p.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-2xl bg-white p-5 shadow-sm text-center">
-          <p className="text-2xl font-bold text-gray-900">{seances.length}</p>
-          <p className="text-xs text-gray-400 mt-0.5">Séances validées</p>
+        <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 text-center">
+          <p className="text-3xl font-bold text-green-700">{totalValides}</p>
+          <p className="mt-1 text-xs text-gray-400">Relevés validés</p>
         </div>
-        <div className="rounded-2xl bg-white p-5 shadow-sm text-center">
-          <p className="text-2xl font-bold text-amber-700">{totalHeures.toFixed(1)}h</p>
-          <p className="text-xs text-gray-400 mt-0.5">Total heures</p>
+        <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 text-center">
+          <p className="text-3xl font-bold text-amber-700">{totalHeures.toFixed(1)} h</p>
+          <p className="mt-1 text-xs text-gray-400">Heures validées</p>
         </div>
-        <div className={`rounded-2xl bg-white p-5 shadow-sm text-center ${totalEcarts > 0 ? 'ring-1 ring-orange-300' : ''}`}>
-          <p className={`text-2xl font-bold ${totalEcarts > 0 ? 'text-orange-600' : 'text-gray-900'}`}>{totalEcarts}</p>
-          <p className="text-xs text-gray-400 mt-0.5">Avec écart VH</p>
+        <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 text-center">
+          <p className="text-3xl font-bold text-gray-900">{totalMontant > 0 ? totalMontant.toLocaleString('fr-FR') : '—'}</p>
+          <p className="mt-1 text-xs text-gray-400">Montant total (FCFA)</p>
         </div>
       </div>
 
+      {/* Filtres */}
+      <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-400">Vacataire</label>
+            <select value={filtreVacataire} onChange={e => setFiltreVacataire(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-amber-400">
+              <option value="">Tous</option>
+              {vacatairesUniques.map(v => <option key={v} value={v}>{v}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-400">Statut</label>
+            <select value={filtreStatut} onChange={e => setFiltreStatut(e.target.value as StatutReleve | 'TOUS')}
+              className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-800 focus:outline-none focus:border-amber-400">
+              <option value="TOUS">Tous les statuts</option>
+              <option value="SOUMIS_FINANCE">En attente</option>
+              <option value="VALIDE">Validés</option>
+              <option value="REJETE">Rejetés</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Liste */}
       {isLoading ? (
-        <div className="flex h-48 items-center justify-center text-gray-400">Chargement…</div>
-      ) : seances.length === 0 ? (
-        <div className="rounded-2xl bg-white p-12 text-center text-gray-400 shadow-sm">
-          Aucune séance validée pour ces critères.
+        <div className="flex h-32 items-center justify-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-4 border-amber-400 border-t-transparent" />
+        </div>
+      ) : releves.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-2xl bg-white p-16 text-center border border-dashed border-gray-200">
+          <p className="text-sm font-semibold text-gray-900">Aucun relevé</p>
+          <p className="mt-1 text-xs text-gray-400">Aucun relevé ne correspond aux filtres sélectionnés.</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {[...parVacataire.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([nom, data]) => (
-            <div key={nom} className="rounded-2xl bg-white shadow-sm overflow-hidden">
-              <div className="flex items-center justify-between bg-gray-50 border-b border-gray-100 px-5 py-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white uppercase" style={{ background: '#1C0800' }}>
-                    {nom.split(' ').map(p => p[0]).slice(0, 2).join('')}
-                  </div>
-                  <span className="font-semibold text-gray-900">{nom}</span>
-                  {data.ecarts > 0 && (
-                    <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
-                      {data.ecarts} écart{data.ecarts > 1 ? 's' : ''}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-sm font-bold text-amber-700">{data.totalH.toFixed(1)}h</span>
-                  <button onClick={() => exportCSV(data.seances, nom.replace(' ', '_'))}
-                    className="rounded-lg border border-gray-200 px-2.5 py-1 text-xs text-gray-600 hover:bg-gray-100">
-                    ↓ CSV
-                  </button>
-                </div>
-              </div>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-100 text-xs text-gray-400 uppercase tracking-wide">
-                    <th className="px-5 py-2.5 text-left font-medium">Date</th>
-                    <th className="px-5 py-2.5 text-left font-medium">Module</th>
-                    <th className="px-5 py-2.5 text-left font-medium">Classe</th>
-                    <th className="px-5 py-2.5 text-left font-medium">Type</th>
-                    <th className="px-5 py-2.5 text-left font-medium">Horaire</th>
-                    <th className="px-5 py-2.5 text-right font-medium">Durée</th>
-                    <th className="px-5 py-2.5 text-left font-medium">Écart</th>
+        <div className="rounded-2xl bg-white shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-5 py-3.5 border-b border-gray-100 bg-gray-50/50">
+            <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
+              {releves.length} relevé{releves.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100">
+                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-gray-400">Vacataire</th>
+                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-gray-400">Module</th>
+                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-gray-400">Classe</th>
+                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-gray-400">Période</th>
+                <th className="px-5 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-gray-400">Heures</th>
+                <th className="px-5 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-gray-400">Montant</th>
+                <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-gray-400">Statut</th>
+                <th className="px-5 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-gray-400">PDF</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {releves.map(r => {
+                const montant = r.tauxHoraire ? r.totalHeuresValidees * r.tauxHoraire : null
+                return (
+                  <tr key={r.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full text-[10px] font-bold text-white flex-shrink-0"
+                          style={{ background: '#1C0800' }}>
+                          {r.nomVacataire.split(' ').map(p => p[0]).slice(0, 2).join('')}
+                        </div>
+                        <span className="font-medium text-gray-900 text-xs">{r.nomVacataire}</span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-3.5 font-medium text-gray-900 text-xs">{r.module ?? '—'}</td>
+                    <td className="px-5 py-3.5 text-xs text-gray-500">{r.classe ?? '—'}</td>
+                    <td className="px-5 py-3.5 text-xs text-gray-500">{periodeLabel(r.periode)}</td>
+                    <td className="px-5 py-3.5 text-right">
+                      <span className="font-bold text-gray-900">{r.totalHeuresValidees.toFixed(1)}h</span>
+                      <span className="text-[10px] text-gray-400 ml-1">({r.nombreSeances} séances)</span>
+                    </td>
+                    <td className="px-5 py-3.5 text-right text-xs font-semibold text-gray-700">
+                      {montant != null ? `${montant.toLocaleString('fr-FR')} FCFA` : '—'}
+                    </td>
+                    <td className="px-5 py-3.5"><BadgeStatut statut={r.statut} /></td>
+                    <td className="px-5 py-3.5 text-right">
+                      <button
+                        onClick={() => releveService.telechargerPdf(r.id)}
+                        className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white"
+                        style={{ background: '#C88500' }}
+                        title="Télécharger PDF"
+                      >
+                        <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        PDF
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {data.seances.map(s => (
-                    <tr key={s.id} className={`border-b border-gray-50 hover:bg-gray-50 transition-colors ${s.justificationEcart ? 'bg-orange-50/40' : ''}`}>
-                      <td className="px-5 py-3 text-gray-700 whitespace-nowrap">{formatDate(s.dateSeance)}</td>
-                      <td className="px-5 py-3 font-medium text-gray-900">{s.module}</td>
-                      <td className="px-5 py-3 text-gray-600 text-xs">{s.classe}</td>
-                      <td className="px-5 py-3 text-gray-500 text-xs">{s.typeSeance ?? '—'}</td>
-                      <td className="px-5 py-3 text-gray-500 text-xs whitespace-nowrap">{s.heureDebut.slice(0, 5)} → {s.heureFin.slice(0, 5)}</td>
-                      <td className="px-5 py-3 text-right font-semibold text-gray-900">{s.duree.toFixed(1)}h</td>
-                      <td className="px-5 py-3">
-                        {s.justificationEcart ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2 py-0.5 text-xs text-orange-800" title={s.justificationEcart}>
-                            ⚠ {s.justificationEcart.length > 30 ? s.justificationEcart.slice(0, 30) + '…' : s.justificationEcart}
-                          </span>
-                        ) : <span className="text-gray-300 text-xs">—</span>}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
+                )
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

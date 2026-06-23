@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { seanceService, type SeanceProgrammeeResponse } from '@/services/seance.service'
 import { api } from '@/services/api'
@@ -58,21 +58,24 @@ export default function AttacheCalendrierPage() {
   const queryClient = useQueryClient()
   const { user } = useAuthStore()
 
-  const niveauDefaut = user?.niveauGere ?? ''
-  const [niveauFiltre, setNiveauFiltre] = useState(niveauDefaut)
+  const [niveauFiltre, setNiveauFiltre] = useState('')
 
   const [lundi, setLundi] = useState<Date>(() => lundiDe(new Date()))
   const [classeNom, setClasseNom] = useState('')
   const [seanceSelectionnee, setSeanceSelectionnee] = useState<SeanceProgrammeeResponse | null>(null)
   const [noteValidation, setNoteValidation] = useState('')
   const [motifAnnulation, setMotifAnnulation] = useState('')
-  const [actionMode, setActionMode] = useState<'valider' | 'annuler' | null>(null)
+  const [actionMode, setActionMode] = useState<'valider' | 'annuler' | 'presence' | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   const reference = toISO(lundi)
 
-  const { data: seances = [], isLoading } = useQuery({
-    queryKey: ['seances-semaine-attache', reference, classeNom],
-    queryFn: () => seanceService.semaine(reference, classeNom || undefined),
+  const { data: seances = [], isLoading, refetch, isFetching } = useQuery({
+    queryKey: ['seances-semaine-attache', reference],
+    queryFn: () => seanceService.semaine(reference),
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   })
 
   const { data: maquette = [] } = useQuery({
@@ -110,20 +113,53 @@ export default function AttacheCalendrierPage() {
     },
   })
 
+  const { mutate: uploadPresence, isPending: uploading } = useMutation({
+    mutationFn: ({ id, file }: { id: number; file: File }) =>
+      seanceService.uploadFeuillePresence(id, file),
+    onSuccess: (updated) => {
+      queryClient.invalidateQueries({ queryKey: ['seances-semaine-attache'] })
+      setSeanceSelectionnee(updated); setActionMode(null); setUploadError(null)
+    },
+    onError: () => setUploadError('Erreur lors de l\'upload. Réessayez.'),
+  })
+
+  // Filtrage client-side par niveau et/ou classe sélectionnés
+  const seancesFiltrees = useMemo(() => {
+    return seances.filter(s => {
+      const toutesClasses: string[] = s.classes && s.classes.length > 0
+        ? s.classes
+        : s.classe ? [s.classe] : []
+
+      // Filtre par classe explicite (dropdown)
+      if (classeNom) {
+        if (toutesClasses.length === 0) return true // pas d'info = on montre
+        return toutesClasses.includes(classeNom)
+      }
+
+      // Filtre par niveau (boutons L1/L2...)
+      if (niveauFiltre) {
+        if (toutesClasses.length === 0) return true // pas d'info = on montre
+        return toutesClasses.some(c => c.toUpperCase().startsWith(niveauFiltre.toUpperCase()))
+      }
+
+      return true
+    })
+  }, [seances, classeNom, niveauFiltre])
+
   const seancesParJour = useMemo(() => {
     const map: Record<number, SeanceProgrammeeResponse[]> = {}
     for (let i = 0; i < 6; i++) map[i] = []
-    for (const s of seances) {
+    for (const s of seancesFiltrees) {
       const date = new Date(s.dateSeance + 'T00:00:00')
       const day = date.getDay()
       const idx = day === 0 ? 6 : day - 1
       if (idx < 6) map[idx].push(s)
     }
     return map
-  }, [seances])
+  }, [seancesFiltrees])
 
-  const programmees = seances.filter(s => s.statut === 'PROGRAMMEE').length
-  const realisees = seances.filter(s => s.statut === 'REALISEE').length
+  const programmees = seancesFiltrees.filter(s => s.statut === 'PROGRAMMEE').length
+  const realisees = seancesFiltrees.filter(s => s.statut === 'REALISEE').length
 
   return (
     <div className="flex h-full flex-col gap-4">
@@ -155,13 +191,25 @@ export default function AttacheCalendrierPage() {
             <button onClick={() => setLundi(lundiDe(new Date()))} className="px-3 py-2 text-xs font-semibold text-[#7A4010] hover:bg-orange-50 border-x border-gray-200 transition-colors">Aujourd'hui</button>
             <button onClick={() => setLundi(addDays(lundi, 7))} className="px-3 py-2 text-sm text-gray-500 hover:bg-gray-50 transition-colors">→</button>
           </div>
+          <button
+            onClick={() => refetch()}
+            disabled={isFetching}
+            title="Rafraîchir"
+            className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition-colors"
+          >
+            <svg className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="23 4 23 10 17 10" /><polyline points="1 20 1 14 7 14" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+            {isFetching ? 'Chargement…' : 'Actualiser'}
+          </button>
         </div>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Séances cette semaine', value: seances.length, icon: '📋', bg: 'bg-[#FDF6ED]', val: 'text-[#7A4010]', sub: 'total' },
+          { label: 'Séances cette semaine', value: seancesFiltrees.length, icon: '📋', bg: 'bg-[#FDF6ED]', val: 'text-[#7A4010]', sub: 'total' },
           { label: 'À valider', value: programmees, icon: '⏳', bg: 'bg-amber-50', val: 'text-amber-700', sub: 'en attente' },
           { label: 'Validées', value: realisees, icon: '✅', bg: 'bg-emerald-50', val: 'text-emerald-700', sub: 'réalisées' },
         ].map(k => (
@@ -260,8 +308,12 @@ export default function AttacheCalendrierPage() {
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-[#C88500]/20 flex items-center justify-center text-base">📋</div>
                 <div>
-                  <h3 className="font-bold text-white text-sm leading-tight">{seanceSelectionnee.module}</h3>
-                  <p className="text-xs text-amber-200/80">{seanceSelectionnee.classe}</p>
+                  <h3 className="font-bold text-white text-sm leading-tight">{seanceSelectionnee.module ?? '—'}</h3>
+                  <p className="text-xs text-amber-200/80">
+                    {seanceSelectionnee.classes && seanceSelectionnee.classes.length > 0
+                      ? seanceSelectionnee.classes.join(', ')
+                      : seanceSelectionnee.classe}
+                  </p>
                 </div>
               </div>
               <button onClick={() => { setSeanceSelectionnee(null); setActionMode(null) }}
@@ -270,9 +322,13 @@ export default function AttacheCalendrierPage() {
 
             <div className="px-5 py-4 space-y-3">
               <Row label="Vacataire" value={seanceSelectionnee.nomVacataire} />
-              <Row label="Classe(s)" value={seanceSelectionnee.classe} />
+              <Row label="Classe(s)" value={
+                seanceSelectionnee.classes && seanceSelectionnee.classes.length > 0
+                  ? seanceSelectionnee.classes.join(', ')
+                  : (seanceSelectionnee.classe ?? '—')
+              } />
               <Row label="Date" value={new Date(seanceSelectionnee.dateSeance + 'T00:00:00').toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })} />
-              <Row label="Horaire" value={`${seanceSelectionnee.heureDebut.slice(0,5)} → ${seanceSelectionnee.heureFin.slice(0,5)} (${seanceSelectionnee.duree.toFixed(1)}h)`} />
+              <Row label="Horaire" value={`${String(seanceSelectionnee.heureDebut).slice(0,5)} → ${String(seanceSelectionnee.heureFin).slice(0,5)} (${seanceSelectionnee.duree.toFixed(1)}h)`} />
               {seanceSelectionnee.salle && <Row label="Salle" value={seanceSelectionnee.salle} />}
               {seanceSelectionnee.typeSeance && <Row label="Type" value={seanceSelectionnee.typeSeance} />}
               <div className="flex items-center gap-3">
@@ -285,54 +341,85 @@ export default function AttacheCalendrierPage() {
               </div>
               {seanceSelectionnee.nomValidePar && <Row label="Validé par" value={seanceSelectionnee.nomValidePar} />}
               {seanceSelectionnee.noteInterne && <Row label="Note" value={seanceSelectionnee.noteInterne} />}
+              {seanceSelectionnee.justificationEcart && <Row label="Justification" value={seanceSelectionnee.justificationEcart} />}
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] font-bold text-[#C88500] uppercase tracking-wider w-20 flex-shrink-0">Présence</span>
+                <span className={`text-xs font-semibold ${seanceSelectionnee.feuillePresenceUploaded ? 'text-green-700' : 'text-gray-400'}`}>
+                  {seanceSelectionnee.feuillePresenceUploaded ? '✓ Feuille uploadée' : 'Non uploadée'}
+                </span>
+              </div>
             </div>
 
-            {seanceSelectionnee.statut === 'PROGRAMMEE' && (
-              <div className="border-t border-gray-100 px-5 py-4 space-y-3">
-                {actionMode === null && (
+            <div className="border-t border-gray-100 px-5 py-4 space-y-3">
+              {/* Actions pour séance PROGRAMMEE */}
+              {seanceSelectionnee.statut === 'PROGRAMMEE' && actionMode === null && (
+                <div className="flex gap-2">
+                  <button onClick={() => setActionMode('valider')}
+                    className="flex-1 rounded-xl bg-green-600 py-2.5 text-sm font-semibold text-white hover:bg-green-700">
+                    ✓ Séance réalisée
+                  </button>
+                  <button onClick={() => setActionMode('annuler')}
+                    className="flex-1 rounded-xl border border-red-200 bg-red-50 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100">
+                    Annuler
+                  </button>
+                </div>
+              )}
+
+              {seanceSelectionnee.statut === 'PROGRAMMEE' && actionMode === 'valider' && (
+                <div className="space-y-2">
+                  <textarea value={noteValidation} onChange={e => setNoteValidation(e.target.value)}
+                    placeholder="Note interne (optionnel)…" rows={2}
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-green-400 resize-none" />
                   <div className="flex gap-2">
-                    <button onClick={() => setActionMode('valider')}
-                      className="flex-1 rounded-xl bg-green-600 py-2.5 text-sm font-semibold text-white hover:bg-green-700">
-                      ✓ Séance réalisée
-                    </button>
-                    <button onClick={() => setActionMode('annuler')}
-                      className="flex-1 rounded-xl border border-red-200 bg-red-50 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100">
-                      Annuler
+                    <button onClick={() => setActionMode(null)} className="flex-1 rounded-xl border border-gray-200 py-2 text-sm text-gray-600">Retour</button>
+                    <button onClick={() => valider(seanceSelectionnee.id)} disabled={validating}
+                      className="flex-1 rounded-xl bg-green-600 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50">
+                      {validating ? 'En cours…' : 'Confirmer réalisée'}
                     </button>
                   </div>
-                )}
+                </div>
+              )}
 
-                {actionMode === 'valider' && (
-                  <div className="space-y-2">
-                    <textarea value={noteValidation} onChange={e => setNoteValidation(e.target.value)}
-                      placeholder="Note interne (optionnel)…" rows={2}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-green-400 resize-none" />
-                    <div className="flex gap-2">
-                      <button onClick={() => setActionMode(null)} className="flex-1 rounded-xl border border-gray-200 py-2 text-sm text-gray-600">Retour</button>
-                      <button onClick={() => valider(seanceSelectionnee.id)} disabled={validating}
-                        className="flex-1 rounded-xl bg-green-600 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50">
-                        {validating ? 'En cours…' : 'Confirmer réalisée'}
-                      </button>
-                    </div>
+              {seanceSelectionnee.statut === 'PROGRAMMEE' && actionMode === 'annuler' && (
+                <div className="space-y-2">
+                  <textarea value={motifAnnulation} onChange={e => setMotifAnnulation(e.target.value)}
+                    placeholder="Motif d'annulation…" rows={2}
+                    className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-red-400 resize-none" />
+                  <div className="flex gap-2">
+                    <button onClick={() => setActionMode(null)} className="flex-1 rounded-xl border border-gray-200 py-2 text-sm text-gray-600">Retour</button>
+                    <button onClick={() => annuler(seanceSelectionnee.id)} disabled={annulant}
+                      className="flex-1 rounded-xl bg-red-600 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50">
+                      {annulant ? 'En cours…' : 'Confirmer annulation'}
+                    </button>
                   </div>
-                )}
+                </div>
+              )}
 
-                {actionMode === 'annuler' && (
-                  <div className="space-y-2">
-                    <textarea value={motifAnnulation} onChange={e => setMotifAnnulation(e.target.value)}
-                      placeholder="Motif d'annulation…" rows={2}
-                      className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:border-red-400 resize-none" />
-                    <div className="flex gap-2">
-                      <button onClick={() => setActionMode(null)} className="flex-1 rounded-xl border border-gray-200 py-2 text-sm text-gray-600">Retour</button>
-                      <button onClick={() => annuler(seanceSelectionnee.id)} disabled={annulant}
-                        className="flex-1 rounded-xl bg-red-600 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50">
-                        {annulant ? 'En cours…' : 'Confirmer annulation'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+              {/* Upload feuille de présence — disponible pour les séances REALISEE */}
+              {seanceSelectionnee.statut === 'REALISEE' && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray-700">
+                    {seanceSelectionnee.feuillePresenceUploaded
+                      ? 'Remplacer la feuille de présence'
+                      : 'Uploader la feuille de présence'}
+                  </p>
+                  {uploadError && <p className="text-xs text-red-600">{uploadError}</p>}
+                  <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png" className="hidden"
+                    onChange={e => {
+                      const file = e.target.files?.[0]
+                      if (file) uploadPresence({ id: seanceSelectionnee.id, file })
+                    }}
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="w-full rounded-xl border border-[#C88500] bg-[#FDF6ED] py-2.5 text-sm font-semibold text-[#7A4010] hover:bg-[#FEF3C7] disabled:opacity-50 transition-colors"
+                  >
+                    {uploading ? 'Upload en cours…' : '📎 Choisir un fichier'}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

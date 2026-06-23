@@ -43,14 +43,16 @@ export default function DetailContratPage() {
     </div>
   )
 
+  const modules = contrat.modules ?? []
+
   const modulesByStatut = {
-    NON_COMMENCE: contrat.modules.filter(m => m.statut === 'NON_COMMENCE'),
-    EN_COURS:     contrat.modules.filter(m => m.statut === 'EN_COURS'),
-    TERMINE:      contrat.modules.filter(m => m.statut === 'TERMINE'),
+    NON_COMMENCE: modules.filter(m => m.statut === 'NON_COMMENCE'),
+    EN_COURS:     modules.filter(m => m.statut === 'EN_COURS'),
+    TERMINE:      modules.filter(m => m.statut === 'TERMINE'),
   }
 
-  const totalVH        = contrat.modules.reduce((s, m) => s + (m.volumeHorairePrevisionnel ?? 0), 0)
-  const totalEffectuees = contrat.modules.reduce((s, m) => s + (m.heuresEffectuees ?? 0), 0)
+  const totalVH        = modules.reduce((s, m) => s + (m.volumeHorairePrevisionnel ?? 0), 0)
+  const totalEffectuees = modules.reduce((s, m) => s + (m.heuresEffectuees ?? 0), 0)
   const progression    = totalVH > 0 ? Math.min(100, Math.round((totalEffectuees / totalVH) * 100)) : 0
   const depassement    = totalEffectuees > totalVH && totalVH > 0
 

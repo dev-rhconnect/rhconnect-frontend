@@ -1,13 +1,17 @@
 import { api } from './api'
+import type { ContratModuleRequest } from './contrat.service'
 
 export type StatutVacataire = 'ACTIF' | 'INACTIF' | 'SUSPENDU'
+export type TypeVacataire = 'STANDARD' | 'PROFESSEUR_UNIVERSITAIRE'
 
 export interface VacataireResponse {
   id: number
   nom: string
   prenom: string
   email: string
-  specialite: string
+  specialite?: string
+  specialites?: string[]
+  niveaux?: string[]
   telephone?: string
   adresse?: string
   numeroCni?: string
@@ -15,8 +19,12 @@ export interface VacataireResponse {
   ipres?: string
   nomBanque?: string
   rib?: string
+  typeVacataire?: TypeVacataire
   statut: StatutVacataire
   signatureUploaded: boolean
+  modules?: string[]
+  aContratActif?: boolean
+  contratActifId?: number
   profilComplet?: boolean
 }
 
@@ -24,7 +32,10 @@ export interface VacataireRequest {
   nom: string
   prenom: string
   email: string
-  specialite: string
+  specialite?: string
+  specialites?: string[]
+  niveaux?: string[]
+  modules?: string[]
   telephone?: string
   adresse?: string
   situationMatrimoniale?: string
@@ -36,6 +47,7 @@ export interface VacataireRequest {
   codeGuichet?: string
   numeroCompte?: string
   rib?: string
+  typeVacataire?: TypeVacataire
 }
 
 export const vacataireService = {
@@ -58,6 +70,14 @@ export const vacataireService = {
     const form = new FormData()
     form.append('file', file)
     return api.post<VacataireResponse>(`/vacataires/${id}/signature`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }).then((r) => r.data)
+  },
+
+  uploadMaSignature: (file: File) => {
+    const form = new FormData()
+    form.append('file', file)
+    return api.post<VacataireResponse>('/vacataires/ma-signature', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }).then((r) => r.data)
   },

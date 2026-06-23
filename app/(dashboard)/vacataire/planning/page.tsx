@@ -174,18 +174,28 @@ export default function PlanningVacatairePage() {
                   return (
                     <div key={s.id} className="rounded-xl border p-3" style={{ borderColor: c.dot + '40', background: c.bg }}>
                       <div className="flex items-start justify-between gap-1 mb-1">
-                        <p className="text-sm font-semibold text-gray-900 leading-snug">{s.module}</p>
+                        <p className="text-sm font-semibold text-gray-900 leading-snug">{s.module ?? '—'}</p>
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap" style={{ background: c.dot, color: 'white' }}>
                           {s.statut === 'PROGRAMMEE' ? 'Prévu' : s.statut === 'REALISEE' ? 'Réalisé' : 'Annulé'}
                         </span>
                       </div>
-                      <p className="text-xs text-gray-600">{s.classe}</p>
+                      <p className="text-xs text-gray-600">
+                        {s.classes && s.classes.length > 0 ? s.classes.join(', ') : s.classe}
+                      </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        {s.heureDebut} – {s.heureFin}
+                        {typeof s.heureDebut === 'string' ? s.heureDebut.slice(0,5) : String(s.heureDebut)} – {typeof s.heureFin === 'string' ? s.heureFin.slice(0,5) : String(s.heureFin)}
                         {s.salle && <span className="ml-2">· Salle {s.salle}</span>}
                         {s.typeSeance && <span className="ml-2">· {s.typeSeance}</span>}
                       </p>
-                      <p className="text-xs font-semibold text-gray-700 mt-1">{s.duree}h</p>
+                      <div className="flex items-center justify-between mt-1">
+                        <p className="text-xs font-semibold text-gray-700">{s.duree}h</p>
+                        {s.feuillePresenceUploaded && (
+                          <span className="text-[10px] text-green-700 font-medium">✓ Feuille uploadée</span>
+                        )}
+                      </div>
+                      {s.noteInterne && (
+                        <p className="text-xs text-gray-400 italic mt-1">Note : {s.noteInterne}</p>
+                      )}
                     </div>
                   )
                 })}
@@ -242,8 +252,10 @@ export default function PlanningVacatairePage() {
                     </div>
                     <div className="h-8 w-px bg-gray-100" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-gray-900 truncate">{s.module}</p>
-                      <p className="text-xs text-gray-400">{s.classe} · {s.heureDebut}–{s.heureFin} · {s.duree}h{s.salle ? ` · Salle ${s.salle}` : ''}</p>
+                      <p className="text-sm font-semibold text-gray-900 truncate">{s.module ?? '—'}</p>
+                      <p className="text-xs text-gray-400">
+                        {s.classes && s.classes.length > 0 ? s.classes.join(', ') : s.classe} · {typeof s.heureDebut === 'string' ? s.heureDebut.slice(0,5) : s.heureDebut}–{typeof s.heureFin === 'string' ? s.heureFin.slice(0,5) : s.heureFin} · {s.duree}h{s.salle ? ` · Salle ${s.salle}` : ''}
+                      </p>
                     </div>
                     <span className="flex-shrink-0 text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: c.dot, color: 'white' }}>
                       {s.statut === 'PROGRAMMEE' ? 'Prévu' : s.statut === 'REALISEE' ? 'Réalisé' : 'Annulé'}

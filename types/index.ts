@@ -11,6 +11,7 @@ export interface User {
   prenom: string
   role: Role
   premierConnexion: boolean
+  niveauGere?: string
 }
 
 export interface AuthResponse {
