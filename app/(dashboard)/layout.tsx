@@ -6,16 +6,28 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthStore, roleLabel } from '@/store/auth.store'
 import Sidebar from '@/components/layout/Sidebar'
 import { notificationService, typeIcon, type NotificationResponse } from '@/services/notification.service'
+import Link from 'next/link'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, _hasHydrated, logout } = useAuthStore()
   const router = useRouter()
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
+  const profileRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!_hasHydrated) return
     if (!user) router.replace('/login')
     else if (user.premierConnexion) router.replace('/changer-mot-de-passe')
   }, [_hasHydrated, user, router])
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) setProfileOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
 
   if (!_hasHydrated || !user) {
     return (
@@ -27,66 +39,103 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const initials = `${user.prenom[0]}${user.nom[0]}`.toUpperCase()
 
+  function handleLogout() {
+    logout()
+    router.replace('/login')
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-ism-warm">
-      <Sidebar />
+      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(v => !v)} />
 
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <header
-          className="flex h-[68px] flex-shrink-0 items-center gap-4 border-b px-8 z-20"
-          style={{
-            background: 'rgba(253,242,236,0.88)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            borderColor: '#F1E2D4',
-          }}
-        >
+        <header className="flex h-16 flex-shrink-0 items-center gap-4 border-b border-gray-100 bg-white px-6">
           {/* Search */}
-          <div className="flex items-center gap-2.5 rounded-3xl border bg-white px-4 py-2.5 w-72 transition-all focus-within:border-ism-gold" style={{ borderColor: '#E7D3C1' }}>
-            <svg className="h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#8A7256' }}>
-              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
+          <div className="relative flex-1 max-w-md">
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+            </span>
             <input
               type="search"
-              placeholder="Rechercher un vacataire, module…"
-              className="w-full bg-transparent text-sm focus:outline-none"
-              style={{ color: '#2B1D10' }}
+              placeholder="Rechercher..."
+              className="w-full rounded-full bg-gray-100 py-2 pl-9 pr-4 text-sm text-gray-700 placeholder-gray-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-ism-gold/40"
             />
           </div>
 
           {/* Actions */}
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-1">
             {/* Cloche notifications */}
             <NotificationBell />
 
-            {/* Paramètres */}
-            <button
-              className="flex h-[42px] w-[42px] items-center justify-center rounded-xl border bg-white transition-colors"
-              style={{ borderColor: '#E7D3C1', color: '#5C4A38' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#C88500'; (e.currentTarget as HTMLElement).style.color = '#C88500' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#E7D3C1'; (e.currentTarget as HTMLElement).style.color = '#5C4A38' }}
-            >
-              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-              </svg>
-            </button>
+            {/* Avatar + menu profil */}
+            <div ref={profileRef} className="relative ml-1">
+              <button
+                onClick={() => setProfileOpen(o => !o)}
+                className="flex items-center gap-2 rounded-xl px-2 py-1.5 hover:bg-gray-100 transition-colors"
+              >
+                <div className="text-right hidden sm:block">
+                  <p className="text-xs font-semibold text-gray-900">{user.prenom} {user.nom}</p>
+                  <p className="text-xs text-gray-400">{roleLabel[user.role]}</p>
+                </div>
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ism-900 text-xs font-bold text-ism-gold ring-2 ring-ism-gold/20">
+                  {initials}
+                </div>
+                <svg className="h-3.5 w-3.5 text-gray-400 hidden sm:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
 
-            {/* Avatar + rôle */}
-            <div
-              className="ml-1 flex items-center gap-2.5 cursor-pointer rounded-3xl border px-2 py-1.5 transition-colors"
-              style={{ borderColor: 'transparent' }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#F1E2D4'; (e.currentTarget as HTMLElement).style.background = '#fff' }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = 'transparent'; (e.currentTarget as HTMLElement).style.background = 'transparent' }}
-            >
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ism-900 text-xs font-bold text-ism-gold">
-                {initials}
-              </div>
-              <div className="text-right hidden sm:block pr-1">
-                <p className="text-[13px] font-bold leading-tight" style={{ color: '#2B1D10' }}>{user.prenom} {user.nom}</p>
-                <p className="text-[11px]" style={{ color: '#8A7256' }}>{roleLabel[user.role]}</p>
-              </div>
+              {profileOpen && (
+                <div className="absolute right-0 top-12 z-50 w-64 rounded-2xl bg-white shadow-xl ring-1 ring-gray-100 overflow-hidden">
+                  {/* Infos utilisateur */}
+                  <div className="border-b border-gray-100 px-4 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-ism-900 text-sm font-bold text-ism-gold">
+                        {initials}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-gray-900 truncate">{user.prenom} {user.nom}</p>
+                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                        <span className="mt-0.5 inline-block rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                          {roleLabel[user.role]}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="py-1.5">
+                    <Link
+                      href="/changer-mot-de-passe"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <svg className="h-4 w-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                      </svg>
+                      Changer le mot de passe
+                    </Link>
+                  </div>
+
+                  <div className="border-t border-gray-100 py-1.5">
+                    <button
+                      onClick={() => { setProfileOpen(false); handleLogout() }}
+                      className="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                        <polyline points="16 17 21 12 16 7" />
+                        <line x1="21" y1="12" x2="9" y2="12" />
+                      </svg>
+                      Se déconnecter
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -137,10 +186,7 @@ function NotificationBell() {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOuvert((o) => !o)}
-        className="relative flex h-[42px] w-[42px] items-center justify-center rounded-xl border bg-white transition-colors"
-        style={{ borderColor: '#E7D3C1', color: '#5C4A38' }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#C88500'; (e.currentTarget as HTMLElement).style.color = '#C88500' }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#E7D3C1'; (e.currentTarget as HTMLElement).style.color = '#5C4A38' }}
+        className="relative rounded-full p-2 text-gray-500 hover:bg-gray-100 transition-colors"
       >
         <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />

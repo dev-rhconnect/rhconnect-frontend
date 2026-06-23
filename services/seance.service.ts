@@ -6,11 +6,14 @@ export type StatutSeance = 'PROGRAMMEE' | 'REALISEE' | 'ANNULEE'
 export interface SeanceProgrammeeResponse {
   id: number
   contratId: number
+  contratModuleId?: number
   nomVacataire: string
   emailVacataire: string
   specialiteVacataire: string
   module: string
   classe: string
+  classes?: string[]
+  justificationEcart?: string
   dateSeance: string
   heureDebut: string
   heureFin: string
@@ -27,21 +30,35 @@ export interface SeanceProgrammeeResponse {
 
 export interface SeanceProgrammeeRequest {
   contratId: number
+  contratModuleId?: number
   disponibiliteId?: number
   dateSeance: string
   heureDebut: string
   heureFin: string
   typeSeance?: TypeSeance
   salle?: string
+  justificationEcart?: string
+}
+
+export interface ModuleActifParClasse {
+  contratModuleId: number
+  contratId: number
+  nomModule: string
+  niveau: string
+  classes: string[]
+  volumeHorairePrevisionnel: number
+  heuresEffectuees: number
+  vacataireNom: string
+  vacataireId: number
 }
 
 export const seanceService = {
   creer: (data: SeanceProgrammeeRequest) =>
     api.post<SeanceProgrammeeResponse>('/seances', data).then((r) => r.data),
 
-  semaine: (reference?: string) =>
+  semaine: (reference?: string, classeNom?: string) =>
     api.get<SeanceProgrammeeResponse[]>('/seances/semaine', {
-      params: reference ? { reference } : undefined,
+      params: { ...(reference ? { reference } : {}), ...(classeNom ? { classeNom } : {}) },
     }).then((r) => r.data),
 
   listerTous: () =>
@@ -60,8 +77,14 @@ export const seanceService = {
       params: motif ? { motif } : undefined,
     }).then((r) => r.data),
 
-  realiseesPourPeriode: (contratId: number, periode: string) =>
-    api.get<SeanceProgrammeeResponse[]>('/seances/realisees', { params: { contratId, periode } }).then((r) => r.data),
+  releve: (params: { vacataireId?: number; classeNom?: string; debut?: string; fin?: string }) =>
+    api.get<SeanceProgrammeeResponse[]>('/seances/releve', { params }).then(r => r.data),
+
+  ecarts: () =>
+    api.get<SeanceProgrammeeResponse[]>('/seances/ecarts').then(r => r.data),
+
+  modulesActifsParClasse: (classeNom: string) =>
+    api.get<ModuleActifParClasse[]>('/seances/modules-actifs', { params: { classeNom } }).then(r => r.data),
 
   uploadFeuillePresence: (id: number, file: File) => {
     const form = new FormData()

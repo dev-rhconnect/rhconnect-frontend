@@ -15,28 +15,33 @@ interface NavItem {
 const navConfig: Record<Role, NavItem[]> = {
   ADMIN: [
     { label: 'Tableau de bord', href: '/admin', icon: <GridIcon />, exact: true },
-    { label: 'Dossiers vacataires', href: '/admin/utilisateurs', icon: <UsersIcon /> },
+    { label: 'Gestion des comptes', href: '/admin/utilisateurs', icon: <UsersIcon /> },
     { label: "Logs d'audit", href: '/admin/logs', icon: <LogIcon /> },
   ],
   RESPONSABLE_PROGRAMME: [
     { label: 'Tableau de bord', href: '/responsable', icon: <GridIcon />, exact: true },
     { label: 'Dossiers vacataires', href: '/responsable/vacataires', icon: <FolderIcon /> },
     { label: 'Contrats', href: '/responsable/contrats', icon: <DocumentIcon /> },
+    { label: 'Maquette pédagogique', href: '/responsable/maquette', icon: <BookOpenIcon /> },
     { label: "Relevés d'heures", href: '/responsable/releves', icon: <ClockIcon /> },
-    { label: 'Emploi du temps', href: '/responsable/emploi-du-temps', icon: <CalendarIcon /> },
+    { label: 'Calendrier', href: '/responsable/emploi-du-temps', icon: <CalendarIcon /> },
   ],
   ATTACHE_CLASSE: [
     { label: 'Tableau de bord', href: '/attache', icon: <GridIcon />, exact: true },
+    { label: 'Calendrier des séances', href: '/attache/calendrier', icon: <CalendarIcon /> },
     { label: "Relevés d'heures", href: '/attache/releves', icon: <ClockIcon /> },
     { label: 'Validations séances', href: '/attache/validations', icon: <CheckSquareIcon /> },
   ],
   RELAIS_FINANCE: [
     { label: 'Tableau de bord', href: '/finance', icon: <GridIcon />, exact: true },
+    { label: "Relevés d'heures", href: '/finance/releves', icon: <ClockIcon /> },
+    { label: 'Écarts volume horaire', href: '/finance/ecarts', icon: <AlertIcon /> },
     { label: 'Validation relevés', href: '/finance/validations', icon: <CheckSquareIcon /> },
     { label: 'Rémunérations', href: '/finance/remunerations', icon: <MoneyIcon /> },
   ],
   VACATAIRE: [
     { label: 'Tableau de bord', href: '/vacataire', icon: <GridIcon />, exact: true },
+    { label: 'Mon planning', href: '/vacataire/planning', icon: <CalendarIcon /> },
     { label: 'Ma fiche de vacation', href: '/vacataire/contrat', icon: <DocumentIcon /> },
     { label: 'Mes disponibilités', href: '/vacataire/disponibilites', icon: <CalendarIcon /> },
     { label: 'Mes relevés validés', href: '/vacataire/releves', icon: <ClockIcon /> },
@@ -49,7 +54,12 @@ const newDossierHref: Partial<Record<Role, string>> = {
   ADMIN: '/admin/utilisateurs/nouveau',
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+  collapsed: boolean
+  onToggle: () => void
+}
+
+export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useAuthStore()
@@ -65,31 +75,38 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="flex h-full w-64 flex-shrink-0 flex-col border-r bg-ism-cream" style={{ borderColor: '#F1E2D4' }}>
-      {/* Logo */}
-      <div className="flex items-center gap-3 border-b px-5 py-5" style={{ borderColor: '#F1E2D4' }}>
-        <svg viewBox="0 0 240 295" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-10 w-9 flex-shrink-0 rounded-xl shadow-sm">
-          <polygon points="120,80 176,113 176,178 120,210 64,178 64,113" fill="none" stroke="#7A4010" strokeWidth="9" strokeLinejoin="round" />
-          <circle cx="120" cy="145" r="11" fill="#7A4010" />
-          <circle cx="120" cy="34" r="25" fill="#EDA832" />
-          <path d="M90,64 Q120,51 150,64 L145,84 L95,84 Z" fill="#EDA832" />
-          <circle cx="24" cy="133" r="20" fill="#C07820" />
-          <path d="M0,158 Q24,146 48,158 L45,176 L3,176 Z" fill="#C07820" />
-          <circle cx="216" cy="128" r="18" fill="#C07820" />
-          <path d="M194,149 Q216,138 238,149 L235,166 L197,166 Z" fill="#C07820" />
-          <circle cx="120" cy="238" r="22" fill="#EDA832" />
-          <path d="M93,264 Q120,252 147,264 L143,283 L97,283 Z" fill="#EDA832" />
-        </svg>
-        <div>
-          <p className="text-lg font-black tracking-tight" style={{ color: '#2B1D10', fontFamily: 'inherit' }}>
-            RH<span style={{ color: '#C88500' }}>Connect</span>
-          </p>
-          <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#8A7256', marginTop: 2 }}>ISM · Vacataires</p>
-        </div>
+    <aside
+      className={`flex h-full flex-shrink-0 flex-col border-r border-gray-100 bg-white transition-all duration-300 ${
+        collapsed ? 'w-16' : 'w-60'
+      }`}
+    >
+      {/* Logo centré + toggle */}
+      <div className="relative flex items-center justify-center border-b border-gray-100 py-5 px-3">
+        <Link href={`/${user.role === 'RESPONSABLE_PROGRAMME' ? 'responsable' : user.role === 'ATTACHE_CLASSE' ? 'attache' : user.role === 'RELAIS_FINANCE' ? 'finance' : user.role === 'ADMIN' ? 'admin' : 'vacataire'}`} title="Tableau de bord">
+          <LogoSVG size={collapsed ? 40 : 64} />
+        </Link>
+        {!collapsed && (
+          <button
+            onClick={onToggle}
+            className="absolute right-2 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+            title="Réduire le menu"
+          >
+            <ChevronLeftIcon />
+          </button>
+        )}
+        {collapsed && (
+          <button
+            onClick={onToggle}
+            className="absolute -right-3 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-400 hover:text-gray-700 shadow-sm transition-colors"
+            title="Ouvrir le menu"
+          >
+            <ChevronRightIcon />
+          </button>
+        )}
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 space-y-0.5 overflow-y-auto px-3.5 py-3">
+      {/* Navigation — items étalés sur toute la hauteur */}
+      <nav className="flex flex-1 flex-col px-2 py-3">
         {items.map((item) => {
           const isActive = item.exact
             ? pathname === item.href
@@ -98,161 +115,114 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-150 ${
+              title={collapsed ? item.label : undefined}
+              className={`flex flex-1 items-center gap-3 rounded-lg px-2.5 text-sm transition-colors ${
+                collapsed ? 'justify-center' : ''
+              } ${
                 isActive
-                  ? 'text-ism-ink'
-                  : 'hover:text-ism-ink'
+                  ? 'border-l-[3px] border-ism-gold bg-orange-50 pl-2 font-semibold text-ism-900'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
               }`}
-              style={
-                isActive
-                  ? {
-                      background: '#EBA94E',
-                      color: '#2B1D10',
-                      boxShadow: '0 4px 12px -4px rgba(196,122,42,0.5)',
-                    }
-                  : {
-                      color: '#5C4A38',
-                    }
-              }
-              onMouseEnter={!isActive ? (e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.6)'; (e.currentTarget as HTMLElement).style.color = '#2B1D10' } : undefined}
-              onMouseLeave={!isActive ? (e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#5C4A38' } : undefined}
             >
-              <span className="h-[19px] w-[19px] flex-shrink-0" style={{ opacity: isActive ? 1 : 0.8 }}>{item.icon}</span>
-              {item.label}
+              <span className="h-4 w-4 flex-shrink-0">{item.icon}</span>
+              {!collapsed && item.label}
             </Link>
           )
         })}
       </nav>
 
       {/* Bottom actions */}
-      <div className="border-t px-3.5 pb-4 pt-3" style={{ borderColor: '#F1E2D4' }}>
-        {newHref && (
-          <Link
-            href={newHref}
-            className="mb-1 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-sm font-bold transition-all"
-            style={{ background: '#fff', borderColor: '#E7D3C1', color: '#2B1D10' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#C88500'; (e.currentTarget as HTMLElement).style.color = '#C88500' }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = '#E7D3C1'; (e.currentTarget as HTMLElement).style.color = '#2B1D10' }}
-          >
-            <span className="text-base leading-none">+</span> Nouveau Dossier
+      <div className="px-2 pb-3">
+        {newHref && !collapsed && (
+          <Link href={newHref}
+            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-semibold text-ism-gold hover:bg-orange-50">
+            + Nouveau Dossier
           </Link>
         )}
-        <div className="my-2" />
+        {newHref && collapsed && (
+          <Link href={newHref} title="Nouveau Dossier"
+            className="flex w-full items-center justify-center rounded-lg py-2 text-ism-gold hover:bg-orange-50 text-lg font-bold">+</Link>
+        )}
+        <div className="my-1.5 border-t border-gray-100" />
         <button
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
-          style={{ color: '#5C4A38' }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#2B1D10' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#5C4A38' }}
-        >
-          <span className="h-4 w-4 opacity-80"><HelpIcon /></span>
-          Aide & support
+          title={collapsed ? 'Aide' : undefined}
+          className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-800 ${collapsed ? 'justify-center' : ''}`}>
+          <span className="h-4 w-4 flex-shrink-0"><HelpIcon /></span>
+          {!collapsed && 'Aide'}
         </button>
         <button
           onClick={handleLogout}
-          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors"
-          style={{ color: '#5C4A38' }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = '#2B1D10' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = '#5C4A38' }}
-        >
-          <span className="h-4 w-4 opacity-80"><LogoutIcon /></span>
-          Déconnexion
+          title={collapsed ? 'Déconnexion' : undefined}
+          className={`flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-800 ${collapsed ? 'justify-center' : ''}`}>
+          <span className="h-4 w-4 flex-shrink-0"><LogoutIcon /></span>
+          {!collapsed && 'Déconnexion'}
         </button>
       </div>
     </aside>
   )
 }
 
+function LogoSVG({ size = 48 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 240 295" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ height: size, width: size * (11/12) }} className="flex-shrink-0">
+      <polygon points="120,80 176,113 176,178 120,210 64,178 64,113" fill="none" stroke="#7A4010" strokeWidth="9" strokeLinejoin="round" />
+      <circle cx="120" cy="145" r="11" fill="#7A4010" />
+      <circle cx="120" cy="34" r="25" fill="#EDA832" />
+      <path d="M90,64 Q120,51 150,64 L145,84 L95,84 Z" fill="#EDA832" />
+      <circle cx="24" cy="133" r="20" fill="#C07820" />
+      <path d="M0,158 Q24,146 48,158 L45,176 L3,176 Z" fill="#C07820" />
+      <circle cx="216" cy="128" r="18" fill="#C07820" />
+      <path d="M194,149 Q216,138 238,149 L235,166 L197,166 Z" fill="#C07820" />
+      <circle cx="120" cy="238" r="22" fill="#EDA832" />
+      <path d="M93,264 Q120,252 147,264 L143,283 L97,283 Z" fill="#EDA832" />
+    </svg>
+  )
+}
+
 /* ── Inline SVG icons ── */
 
 function GridIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
-      <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
-    </svg>
-  )
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
 }
 function UsersIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  )
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
 }
 function FolderIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-    </svg>
-  )
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>
 }
 function CheckSquareIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="9 11 12 14 22 4" />
-      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-    </svg>
-  )
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
 }
 function LogIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
-      <polyline points="10 9 9 9 8 9" />
-    </svg>
-  )
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
 }
 function DocumentIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
-    </svg>
-  )
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>
 }
 function CalendarIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-      <line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  )
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
 }
 function ClockIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-    </svg>
-  )
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
 }
 function MoneyIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="1" x2="12" y2="23" />
-      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-    </svg>
-  )
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
 }
 function HelpIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-      <line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-  )
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
 }
 function LogoutIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
-    </svg>
-  )
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+}
+function BookOpenIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg>
+}
+function AlertIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg>
+}
+function ChevronLeftIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6" /></svg>
+}
+function ChevronRightIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6" /></svg>
 }
