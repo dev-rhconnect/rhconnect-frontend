@@ -157,7 +157,6 @@ export default function ContratsPage() {
 
       {/* ── Tableau ── */}
       <div className="rounded-2xl bg-white shadow-sm overflow-hidden border border-gray-100">
-        <div className="overflow-x-auto">
 
         {isLoading && (
           <div className="flex items-center justify-center py-20">
@@ -184,6 +183,7 @@ export default function ContratsPage() {
 
         {!isLoading && !isError && filtered.length > 0 && (
           <>
+            <div className="overflow-x-auto">
             <table className="w-full min-w-[700px] text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/50">
@@ -233,6 +233,7 @@ export default function ContratsPage() {
         )}
       </div>
     </div>
+  )
   )
 }
 
