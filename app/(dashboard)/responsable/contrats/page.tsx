@@ -234,7 +234,6 @@ export default function ContratsPage() {
       </div>
     </div>
   )
-  )
 }
 
 function ContratRow({ c }: { c: ContratResponse }) {
