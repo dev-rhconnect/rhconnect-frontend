@@ -200,12 +200,12 @@ export default function MaquettePage() {
     <div className="space-y-5">
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Maquette pédagogique</h1>
+          <h1 className="text-xl font-bold sm:text-2xl text-gray-900">Maquette pédagogique</h1>
           <p className="mt-1 text-sm text-gray-500">Table de référence : classe + module → volume horaire prévu</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 self-start shrink-0">
           <button onClick={() => { setShowImport(true); setImportStatus(null) }}
             className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 transition-colors">
             <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -225,7 +225,7 @@ export default function MaquettePage() {
       </div>
 
       {/* ── KPIs ── */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 flex items-center gap-4">
           <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl" style={{ background: '#FEF3C7' }}>
             <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="#B45309" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -266,7 +266,7 @@ export default function MaquettePage() {
       </div>
 
       {/* ── Filtres ── */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {/* Recherche */}
         <div className="relative w-72 flex-shrink-0">
           <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">
@@ -363,7 +363,8 @@ export default function MaquettePage() {
                 </div>
 
                 {/* Lignes modules */}
-                <table className="w-full text-sm">
+                <div className="overflow-x-auto">
+                <table className="w-full min-w-[600px] text-sm">
                   <thead>
                     <tr className="bg-gray-50/50 border-b border-gray-100">
                       <th className="px-5 py-2.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-400">Module</th>
@@ -411,6 +412,7 @@ export default function MaquettePage() {
                     })}
                   </tbody>
                 </table>
+                </div>
               </div>
             )
           })}

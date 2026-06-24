@@ -182,7 +182,8 @@ function RelevesSoumisSection() {
                   {r.lignes.length === 0 ? (
                     <p className="px-8 py-3 text-xs text-gray-400 italic">Aucune séance.</p>
                   ) : (
-                    <table className="w-full text-sm">
+                    <div className="overflow-x-auto">
+                    <table className="w-full min-w-[600px] text-sm">
                       <thead>
                         <tr className="border-b border-blue-100">
                           <th className="px-6 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-gray-400">Date</th>
@@ -208,6 +209,7 @@ function RelevesSoumisSection() {
                         ))}
                       </tbody>
                     </table>
+                    </div>
                   )}
                 </div>
               )}
@@ -351,9 +353,9 @@ export default function RelevesPage() {
       <RelevesSoumisSection />
 
       {/* ── Header reporting ── */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Relevés d'heures — vue détaillée</h2>
+          <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Relevés d'heures — vue détaillée</h2>
           <p className="mt-1 text-sm text-gray-500">
             {vacataireSel
               ? `${vacataireSel.prenom} ${vacataireSel.nom}${classeNom ? ` · ${classeNom}` : ''} — ${relevesVacataire.length} relevé${relevesVacataire.length !== 1 ? 's' : ''}`
@@ -362,7 +364,7 @@ export default function RelevesPage() {
         </div>
         <button onClick={() => exportCSV(relevesVacataire, [vacataireSel?.nom ?? 'tous', classeNom || 'toutes', debut, fin].join('_'))}
           disabled={relevesVacataire.length === 0}
-          className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 shadow-sm">
+          className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 shadow-sm self-start shrink-0">
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
           </svg>
@@ -372,7 +374,7 @@ export default function RelevesPage() {
 
       {/* ── Filtres ── */}
       <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
           {/* Vacataire */}
           <div>
@@ -443,7 +445,7 @@ export default function RelevesPage() {
       {vacataireId !== '' && (
         <>
           {/* KPIs */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 flex items-center gap-4">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: '#F0FDF4' }}>
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="#15803D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -540,7 +542,8 @@ export default function RelevesPage() {
                             </p>
                           </div>
                           {r.lignes && r.lignes.length > 0 ? (
-                            <table className="w-full text-sm">
+                            <div className="overflow-x-auto">
+                            <table className="w-full min-w-[600px] text-sm">
                               <thead>
                                 <tr className="border-b border-amber-100">
                                   <th className="px-5 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-gray-400 w-32">Date</th>
@@ -566,6 +569,7 @@ export default function RelevesPage() {
                                   ))}
                               </tbody>
                             </table>
+                            </div>
                           ) : (
                             <p className="px-5 py-4 text-xs text-gray-400">Aucun détail de ligne disponible.</p>
                           )}

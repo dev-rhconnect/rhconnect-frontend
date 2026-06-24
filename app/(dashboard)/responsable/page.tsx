@@ -114,12 +114,12 @@ export default function ResponsableDashboard() {
     <div className="space-y-5">
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Bonjour, {user?.prenom ?? 'Responsable'}</h2>
+          <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Bonjour, {user?.prenom ?? 'Responsable'}</h2>
           <p className="mt-1 text-sm text-gray-500">Vue d'ensemble de votre programme — {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 self-start shrink-0">
           <div className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2">
             <input type="month" value={exportMois} onChange={e => setExportMois(e.target.value)}
               className="text-xs text-gray-600 focus:outline-none" />
@@ -142,7 +142,7 @@ export default function ResponsableDashboard() {
       </div>
 
       {/* ── Ligne 1 : 3 donuts + 1 alerte ── */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
         {/* Donut Vacataires */}
         <div className="rounded-2xl bg-white p-5 shadow-sm">
@@ -241,10 +241,10 @@ export default function ResponsableDashboard() {
       </div>
 
       {/* ── Ligne 2 : Area chart + Bar chart ── */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
 
         {/* Évolution séances */}
-        <div className="col-span-3 rounded-2xl bg-white p-5 shadow-sm">
+        <div className="lg:col-span-3 rounded-2xl bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-sm font-bold text-gray-900">Évolution des séances</p>
@@ -281,7 +281,7 @@ export default function ResponsableDashboard() {
         </div>
 
         {/* Bar chart relevés */}
-        <div className="col-span-2 rounded-2xl bg-white p-5 shadow-sm">
+        <div className="lg:col-span-2 rounded-2xl bg-white p-5 shadow-sm">
           <div className="mb-4">
             <p className="text-sm font-bold text-gray-900">Relevés d'heures</p>
             <p className="text-xs text-gray-400">Répartition par statut</p>
@@ -307,7 +307,7 @@ export default function ResponsableDashboard() {
       </div>
 
       {/* ── Ligne 3 : Accès rapides ── */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { label: 'Dossiers vacataires', href: '/responsable/vacataires',     desc: 'Gérer les profils et signatures',  icon: 'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M12 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z', color: '#FEF3C7', stroke: GOLD },
           { label: 'Contrats',            href: '/responsable/contrats',        desc: 'Créer et suivre les contrats',      icon: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8', color: '#FEF3C7', stroke: GOLD },

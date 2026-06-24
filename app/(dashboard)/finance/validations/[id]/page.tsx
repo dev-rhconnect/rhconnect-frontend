@@ -95,7 +95,7 @@ export default function ReleveDetailFinancePage() {
         <div className="absolute -bottom-8 right-8 h-32 w-32 rounded-full" style={{ background: 'rgba(255,255,255,0.05)' }} />
 
         {/* Infos principales */}
-        <div className="relative flex items-start justify-between px-6 pt-6 pb-5">
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between px-6 pt-6 pb-5">
           <div>
             <div className="mb-2 inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-xs font-semibold uppercase tracking-wide" style={{ background: 'rgba(28,8,0,0.25)', color: '#fff' }}>
               <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" />
@@ -114,7 +114,7 @@ export default function ReleveDetailFinancePage() {
         </div>
 
         {/* Métriques — bandeau plein largeur sans gap */}
-        <div className="relative grid grid-cols-3 divide-x border-t" style={{ borderColor: 'rgba(255,255,255,0.15)' }}>
+        <div className="relative grid grid-cols-1 sm:grid-cols-3 divide-x border-t" style={{ borderColor: 'rgba(255,255,255,0.15)' }}>
           {[
             { label: 'Heures soumises', value: `${heuresSoumises.toFixed(1)} h` },
             { label: 'Séances', value: String(lignesValides.length) },
@@ -137,7 +137,7 @@ export default function ReleveDetailFinancePage() {
           </svg>
           <h3 className="text-sm font-bold text-gray-900">Informations du contrat</h3>
         </div>
-        <div className="grid grid-cols-2 gap-px bg-gray-50">
+        <div className="grid grid-cols-1 gap-px bg-gray-50 sm:grid-cols-2">
           {[
             { label: 'Vacataire', value: releve.nomVacataire },
             { label: 'Module', value: releve.module },
@@ -270,11 +270,11 @@ export default function ReleveDetailFinancePage() {
 
       {/* Actions */}
       {releve.statut === 'SOUMIS' && (
-        <div className="flex items-center justify-between rounded-2xl bg-white p-5 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between rounded-2xl bg-white p-5 shadow-sm">
           <p className="text-sm text-gray-500">
             Vérifiez les informations avant de valider ou rejeter ce relevé.
           </p>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 self-start sm:self-auto">
             <button
               onClick={() => setShowRejet(true)}
               className="inline-flex items-center gap-2 rounded-xl border border-red-200 px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"

@@ -27,12 +27,12 @@ export default function VacataireRelevesPage() {
     <div>
       {/* En-tête */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Mes relevés d'heures</h2>
+        <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Mes relevés d'heures</h2>
         <p className="mt-1 text-sm text-gray-500">Suivi de tous vos relevés, du dépôt jusqu'à la validation Finance</p>
       </div>
 
       {/* KPI */}
-      <div className="mb-6 grid grid-cols-3 gap-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
           <p className="text-sm text-gray-500">Total relevés</p>
           <p className="mt-1 text-4xl font-bold text-gray-900">{releves.length}</p>
@@ -67,7 +67,8 @@ export default function VacataireRelevesPage() {
         )}
 
         {!isLoading && !isError && releves.length > 0 && (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px] text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/50">
                 <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Module</th>
@@ -126,6 +127,7 @@ export default function VacataireRelevesPage() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

@@ -54,16 +54,16 @@ export default function VacataireDisponibilitesPage() {
   return (
     <div>
       {/* En-tête */}
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Mes disponibilités</h2>
+          <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Mes disponibilités</h2>
           <p className="mt-1 text-sm text-gray-500">
             Déclarez vos créneaux disponibles pour que le Responsable de Programme puisse planifier vos séances.
           </p>
         </div>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white self-start shrink-0"
           style={{ background: '#C88500' }}
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
@@ -72,7 +72,7 @@ export default function VacataireDisponibilitesPage() {
       </div>
 
       {/* KPIs */}
-      <div className="mb-6 grid grid-cols-3 gap-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         {[
           { label: 'Total déclarés', value: disponibilites.length, color: 'text-gray-900' },
           { label: 'En attente', value: proposees, color: 'text-amber-600' },
@@ -124,7 +124,8 @@ export default function VacataireDisponibilitesPage() {
         )}
 
         {!isLoading && !isError && disponibilites.length > 0 && (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px] text-sm">
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Date</th>
@@ -170,6 +171,7 @@ export default function VacataireDisponibilitesPage() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
@@ -200,7 +202,7 @@ export default function VacataireDisponibilitesPage() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 mb-1.5">
                     Heure début <span className="text-red-500">*</span>

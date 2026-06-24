@@ -97,7 +97,7 @@ export default function NouvelAvenantPage() {
             Avenant au contrat {contrat.anneeAcademique} de {contrat.nomVacataire}
           </p>
         )}
-        <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+        <div className="mt-4 grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           <div>
             <p className="text-xs text-gray-400 mb-1">Numéro d'avenant</p>
             <p className="font-mono font-semibold text-gray-900">{numeroAvenant}</p>
@@ -140,7 +140,7 @@ export default function NouvelAvenantPage() {
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label className="mb-1 block text-xs font-medium text-gray-700">Module</label>
                     <select
@@ -242,7 +242,7 @@ export default function NouvelAvenantPage() {
       )}
 
       {/* Actions */}
-      <div className="flex items-center justify-between pb-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pb-6">
         <Link
           href={`/responsable/contrats/${contratParentId}`}
           className="rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-100 transition-colors"

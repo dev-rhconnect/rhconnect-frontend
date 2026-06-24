@@ -72,15 +72,15 @@ export default function FinanceRelevesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Relevés — historique</h2>
+          <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Relevés — historique</h2>
           <p className="mt-1 text-sm text-gray-500">Relevés transmis au Finance (en attente, validés, rejetés)</p>
         </div>
         <button
           onClick={() => exportCSV(releves, filtreVacataire || 'tous')}
           disabled={releves.length === 0}
-          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 shadow-sm"
+          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 shadow-sm self-start shrink-0"
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" />
@@ -90,7 +90,7 @@ export default function FinanceRelevesPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100 text-center">
           <p className="text-3xl font-bold text-green-700">{totalValides}</p>
           <p className="mt-1 text-xs text-gray-400">Relevés validés</p>
@@ -107,7 +107,7 @@ export default function FinanceRelevesPage() {
 
       {/* Filtres */}
       <div className="rounded-2xl bg-white p-5 shadow-sm border border-gray-100">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-400">Vacataire</label>
             <select value={filtreVacataire} onChange={e => setFiltreVacataire(e.target.value)}
@@ -146,7 +146,8 @@ export default function FinanceRelevesPage() {
               {releves.length} relevé{releves.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px] text-sm">
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-5 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-gray-400">Vacataire</th>
@@ -202,6 +203,7 @@ export default function FinanceRelevesPage() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

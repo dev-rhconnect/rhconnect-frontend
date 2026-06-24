@@ -139,7 +139,7 @@ export default function VacataireContratPage() {
   return (
     <div className="mx-auto max-w-4xl">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Ma fiche de vacation</h2>
+        <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Ma fiche de vacation</h2>
         <p className="mt-1 text-sm text-gray-500">Consultez vos contrats, vos modules et mettez à jour vos coordonnées</p>
       </div>
 
@@ -386,7 +386,8 @@ export default function VacataireContratPage() {
           {historique.length > 0 && (
             <div className="rounded-2xl bg-white p-6 shadow-sm">
               <h3 className="mb-4 text-base font-bold text-gray-900">Historique des contrats</h3>
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px] text-sm">
                 <thead>
                   <tr className="border-b border-gray-100">
                     <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Année</th>
@@ -421,6 +422,7 @@ export default function VacataireContratPage() {
                   })}
                 </tbody>
               </table>
+              </div>
             </div>
           )}
         </div>

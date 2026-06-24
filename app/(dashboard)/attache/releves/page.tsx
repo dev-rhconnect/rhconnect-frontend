@@ -367,7 +367,7 @@ export default function AttacheRelevesPage() {
 
       {/* ── Header ── */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Relevés d'heures</h2>
+        <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Relevés d'heures</h2>
         <p className="mt-1 text-sm text-gray-500">
           Générés automatiquement lors de la validation des séances · Un relevé par module par mois
         </p>
@@ -383,7 +383,7 @@ export default function AttacheRelevesPage() {
       </div>
 
       {/* ── KPIs ── */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { label: 'Total relevés',  value: kpis.total,          color: 'text-gray-900',   bg: 'bg-white' },
           { label: 'En cours',       value: kpis.enCours,        color: 'text-[#7A4010]',  bg: 'bg-[#FDF6ED]' },
@@ -399,7 +399,7 @@ export default function AttacheRelevesPage() {
 
       {/* ── Filtres ── */}
       <div className="rounded-2xl bg-white border border-gray-100 shadow-sm px-5 py-4">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
             <label className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-gray-400">Mois</label>
             <select value={periode} onChange={e => setPeriode(e.target.value)}

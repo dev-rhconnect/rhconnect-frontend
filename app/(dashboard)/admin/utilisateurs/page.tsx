@@ -52,7 +52,7 @@ function CreateCompteModal({
         </div>
 
         <div className="px-6 py-5 space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <label className="mb-1.5 block text-xs font-semibold text-gray-700">Prénom <span className="text-red-500">*</span></label>
               <input
@@ -193,16 +193,16 @@ export default function AdminUtilisateursPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Comptes utilisateurs</h2>
+          <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Comptes utilisateurs</h2>
           <p className="mt-1 text-sm text-gray-500">
             Gérez les accès de l'équipe administrative ISM
           </p>
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white self-start shrink-0"
           style={{ background: '#C88500' }}
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -213,7 +213,7 @@ export default function AdminUtilisateursPage() {
       </div>
 
       {/* KPIs */}
-      <div className="mb-6 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {([
           { role: 'RESPONSABLE_PROGRAMME', label: 'Resp. Programme', color: 'text-blue-600', bg: 'bg-blue-50' },
           { role: 'ATTACHE_CLASSE',        label: 'Attachés Classe', color: 'text-purple-600', bg: 'bg-purple-50' },
@@ -280,7 +280,8 @@ export default function AdminUtilisateursPage() {
         )}
 
         {!isLoading && !isError && filtered.length > 0 && (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px] text-sm">
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Utilisateur</th>
@@ -365,6 +366,7 @@ export default function AdminUtilisateursPage() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 

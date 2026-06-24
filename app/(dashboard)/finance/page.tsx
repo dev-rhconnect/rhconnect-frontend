@@ -93,12 +93,12 @@ export default function FinanceDashboard() {
     <div className="space-y-5">
 
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Bonjour, {user?.prenom ?? 'Relais Finance'}</h2>
+          <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Bonjour, {user?.prenom ?? 'Relais Finance'}</h2>
           <p className="mt-1 text-sm text-gray-500">Tableau de bord financier — validez les relevés et supervisez les rémunérations.</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 self-start shrink-0">
           <div className="flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2">
             <input type="month" value={exportMois} onChange={e => setExportMois(e.target.value)}
               className="text-xs text-gray-600 focus:outline-none" />
@@ -122,7 +122,7 @@ export default function FinanceDashboard() {
       </div>
 
       {/* ── KPIs ── */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
         {/* Relevés à valider */}
         <div className={`rounded-2xl p-5 shadow-sm flex flex-col gap-3 ${totalAValider > 0 ? 'border-2 border-blue-300 bg-blue-50' : 'bg-white'}`}>
@@ -225,10 +225,10 @@ export default function FinanceDashboard() {
       </div>
 
       {/* ── Graphiques ── */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
 
         {/* Bar montants */}
-        <div className="col-span-3 rounded-2xl bg-white p-5 shadow-sm">
+        <div className="lg:col-span-3 rounded-2xl bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-sm font-bold text-gray-900">Rémunérations nettes par vacataire</p>
@@ -254,7 +254,7 @@ export default function FinanceDashboard() {
         </div>
 
         {/* Bar relevés par mois */}
-        <div className="col-span-2 rounded-2xl bg-white p-5 shadow-sm">
+        <div className="lg:col-span-2 rounded-2xl bg-white p-5 shadow-sm">
           <div className="mb-4">
             <p className="text-sm font-bold text-gray-900">Validations par mois</p>
             <p className="text-xs text-gray-400">5 derniers mois</p>
@@ -277,7 +277,7 @@ export default function FinanceDashboard() {
       </div>
 
       {/* Accès rapides */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { label: 'Validation relevés',  href: '/finance/validations',  desc: 'Valider ou rejeter les relevés',    color: '#EFF6FF', stroke: BLUE },
           { label: 'Rémunérations',       href: '/finance/remunerations', desc: 'Fiches de paie et paiements',       color: '#FEF3C7', stroke: GOLD },

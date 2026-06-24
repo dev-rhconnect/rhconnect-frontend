@@ -79,7 +79,7 @@ export default function AttacheValidationsPage() {
     <div className="flex flex-col gap-0">
       {/* En-tête */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Validations des Séances</h2>
+        <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Validations des Séances</h2>
         <p className="mt-1 text-sm text-gray-500">
           {isLoading ? 'Chargement…' : `${count} séance${count !== 1 ? 's' : ''} en attente de traitement administratif.`}
         </p>
@@ -92,9 +92,9 @@ export default function AttacheValidationsPage() {
       )}
 
       {/* Split view */}
-      <div className="flex gap-4 min-h-[520px]">
+      <div className="flex flex-col gap-4 min-h-[520px] lg:flex-row">
         {/* Liste — gauche */}
-        <div className="w-[420px] flex-shrink-0 rounded-2xl bg-white shadow-sm overflow-hidden">
+        <div className="w-full lg:w-[420px] flex-shrink-0 rounded-2xl bg-white shadow-sm overflow-hidden">
           {!isLoading && seances.length === 0 && (
             <div className="flex flex-col items-center justify-center py-20 text-center px-6">
               <svg className="mb-3 h-10 w-10 text-gray-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /></svg>
@@ -104,7 +104,8 @@ export default function AttacheValidationsPage() {
           )}
 
           {seances.length > 0 && (
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px] text-sm">
               <thead>
                 <tr className="border-b border-gray-100">
                   <th className="w-8 px-3 py-3" />
@@ -168,6 +169,7 @@ export default function AttacheValidationsPage() {
                 })}
               </tbody>
             </table>
+            </div>
           )}
         </div>
 

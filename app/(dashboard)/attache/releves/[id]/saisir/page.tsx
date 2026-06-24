@@ -77,7 +77,7 @@ export default function SaisirSeancePage() {
   return (
     <div className="mx-auto max-w-5xl">
       {/* En-tête */}
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <Link
             href="/attache/releves"
@@ -88,7 +88,7 @@ export default function SaisirSeancePage() {
             </svg>
             Mes relevés
           </Link>
-          <h2 className="text-2xl font-bold text-gray-900">{releve.nomVacataire}</h2>
+          <h2 className="text-xl font-bold sm:text-2xl text-gray-900">{releve.nomVacataire}</h2>
           <p className="mt-0.5 text-sm text-gray-500">
             {releve.module} — {releve.classe} — {releve.periode}
           </p>
@@ -124,7 +124,7 @@ export default function SaisirSeancePage() {
 
               {/* Horaires */}
               {!absence && (
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Heure début</label>
                     <input
@@ -230,7 +230,8 @@ export default function SaisirSeancePage() {
                 <p className="text-sm text-gray-400">Aucune séance saisie pour ce relevé.</p>
               </div>
             ) : (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px] text-sm">
                 <thead>
                   <tr className="border-b border-gray-50">
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Date</th>
@@ -267,6 +268,7 @@ export default function SaisirSeancePage() {
                   })}
                 </tbody>
               </table>
+            </div>
             )}
           </div>
         </div>

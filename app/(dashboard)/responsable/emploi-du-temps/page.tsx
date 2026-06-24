@@ -143,12 +143,12 @@ export default function CalendrierPage() {
   return (
     <div className="flex h-full flex-col gap-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Emploi du temps</h2>
+          <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Emploi du temps</h2>
           <p className="mt-0.5 text-sm text-gray-500">📅 {formatSemaine(lundi)}</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 self-start shrink-0">
           <select
             value={classeNom}
             onChange={e => setClasseNom(e.target.value)}
@@ -173,7 +173,7 @@ export default function CalendrierPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {[
           { label: 'Total séances', value: stats.total, icon: '📋', bg: 'bg-[#FDF6ED]', val: 'text-[#7A4010]', sub: 'cette semaine' },
           { label: 'Programmées', value: stats.programmees, icon: '🗓', bg: 'bg-amber-50', val: 'text-amber-700', sub: 'à venir' },
@@ -673,7 +673,7 @@ function PlanifierModal({ dateInitiale, heureInitiale, classePreselect, onClose,
               )}
 
               {/* Heures */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold text-gray-700">Début <span className="text-red-500">*</span></label>
                   <input type="time" value={heureDebut} onChange={e => setHeureDebut(e.target.value)}
@@ -703,7 +703,7 @@ function PlanifierModal({ dateInitiale, heureInitiale, classePreselect, onClose,
               )}
 
               {/* ── Mode + Type + Salle ── */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1.5 block text-xs font-semibold text-gray-700">Mode</label>
                   <div className="flex gap-2">

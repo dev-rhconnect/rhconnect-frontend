@@ -26,7 +26,7 @@ export default function VacataaireFichesPaiePage() {
     <div>
       {/* En-tête */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Mes fiches de paie</h2>
+        <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Mes fiches de paie</h2>
         <p className="mt-1 text-sm text-gray-500">Consultez et téléchargez vos fiches de rémunération</p>
       </div>
 
@@ -64,7 +64,8 @@ export default function VacataaireFichesPaiePage() {
         )}
 
         {!isLoading && !isError && fiches.length > 0 && (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px] text-sm">
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Période</th>
@@ -110,6 +111,7 @@ export default function VacataaireFichesPaiePage() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

@@ -42,9 +42,9 @@ export default function FinanceRemunerationsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Rémunérations</h2>
+          <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Rémunérations</h2>
           <p className="mt-1 text-sm text-gray-500">Fiches de paie générées automatiquement après validation des relevés</p>
         </div>
         <button
@@ -53,7 +53,7 @@ export default function FinanceRemunerationsPage() {
             try { await paiementService.exporterBC365() } finally { setExporting(false) }
           }}
           disabled={exporting}
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50 transition-colors"
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50 transition-colors self-start shrink-0"
           style={{ background: '#1C6E3D' }}
         >
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -66,7 +66,7 @@ export default function FinanceRemunerationsPage() {
       </div>
 
       {/* KPIs */}
-      <div className="mb-5 grid grid-cols-3 gap-4">
+      <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-2xl bg-white p-5 shadow-sm">
           <p className="text-xs text-gray-500 uppercase tracking-wide">Fiches générées</p>
           <p className="mt-1 text-3xl font-bold text-gray-900">{filtered.length}</p>
@@ -117,7 +117,8 @@ export default function FinanceRemunerationsPage() {
         )}
 
         {!isLoading && !isError && filtered.length > 0 && (
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[600px] text-sm">
             <thead>
               <tr className="border-b border-gray-100">
                 <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">Vacataire</th>
@@ -175,6 +176,7 @@ export default function FinanceRemunerationsPage() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

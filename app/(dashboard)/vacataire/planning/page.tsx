@@ -69,7 +69,7 @@ export default function PlanningVacatairePage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Mon planning</h2>
+        <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Mon planning</h2>
         <p className="mt-1 text-sm text-gray-500">Consultez vos séances programmées, réalisées et annulées.</p>
       </div>
 

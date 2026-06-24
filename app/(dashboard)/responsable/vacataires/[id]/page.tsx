@@ -89,7 +89,7 @@ export default function DossierVacatairePage() {
 
       {/* Header profil */}
       <div className="rounded-2xl bg-white p-6 shadow-sm">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-2xl font-bold text-amber-700">
               {vacataire.prenom[0]}{vacataire.nom[0]}
@@ -377,7 +377,7 @@ function NouveauContratModal({ vacataireId, vacataire, maquette, loadingMaquette
 
         <div className="overflow-y-auto flex-1 px-6 py-4 space-y-4">
           {/* ── Période & Taux ── */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-gray-700">Date début</label>
               <input type="date" value={dateDebut} onChange={e => setDateDebut(e.target.value)}
@@ -424,7 +424,7 @@ function NouveauContratModal({ vacataireId, vacataire, maquette, loadingMaquette
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
                       <label className="mb-1 block text-xs font-medium text-gray-700">Module</label>
                       <select

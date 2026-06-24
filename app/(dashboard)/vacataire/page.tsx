@@ -64,9 +64,9 @@ export default function VacataireDashboard() {
 
   return (
     <div>
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-xl font-bold sm:text-2xl text-gray-900">
             Bonjour, {user?.prenom ?? 'Vacataire'}
           </h2>
           <p className="mt-1 text-sm text-gray-500">
@@ -77,7 +77,7 @@ export default function VacataireDashboard() {
         </div>
         <Link
           href="/vacataire/contrat"
-          className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-bold text-ism-900 hover:text-ism-gold transition-colors"
+          className="flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-bold text-ism-900 hover:text-ism-gold transition-colors self-start shrink-0"
         >
           Mon contrat →
         </Link>

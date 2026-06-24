@@ -166,7 +166,7 @@ export default function AttacheCalendrierPage() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Calendrier des séances</h2>
+          <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Calendrier des séances</h2>
           <p className="mt-0.5 text-sm text-gray-500">📅 {formatSemaine(lundi)} · Validez les séances réalisées</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -207,7 +207,7 @@ export default function AttacheCalendrierPage() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {[
           { label: 'Séances cette semaine', value: seancesFiltrees.length, icon: '📋', bg: 'bg-[#FDF6ED]', val: 'text-[#7A4010]', sub: 'total' },
           { label: 'À valider', value: programmees, icon: '⏳', bg: 'bg-amber-50', val: 'text-amber-700', sub: 'en attente' },

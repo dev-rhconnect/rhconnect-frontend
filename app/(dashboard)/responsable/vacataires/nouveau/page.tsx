@@ -156,7 +156,7 @@ export default function NouveauVacatairePage() {
       </div>
 
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Nouveau dossier vacataire</h2>
+        <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Nouveau dossier vacataire</h2>
         <p className="mt-1 text-sm text-gray-500">
           Créez le dossier du vacataire. Le contrat sera créé depuis le dossier une fois le profil enregistré.
         </p>
@@ -166,7 +166,7 @@ export default function NouveauVacatairePage() {
 
         {/* ─── Section 1 — Identité ─── */}
         <FormSection title="Identité" subtitle="Informations obligatoires" icon={<PersonIcon />}>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Prénom" required error={errors.prenom?.message}>
               <input {...register('prenom')} placeholder="Ex : Mamadou" className={inputCls(!!errors.prenom)} />
             </Field>
@@ -292,7 +292,7 @@ export default function NouveauVacatairePage() {
 
         {/* ─── Section 3 — Coordonnées ─── */}
         <FormSection title="Coordonnées personnelles" subtitle="Informations de contact (facultatif)" icon={<MapPinIcon />}>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Téléphone">
               <input {...register('telephone')} placeholder="77 000 00 00" className={inputCls(false)} />
             </Field>
@@ -309,7 +309,7 @@ export default function NouveauVacatairePage() {
           <Field label="Adresse complète">
             <input {...register('adresse')} placeholder="Ex : Mermoz, Dakar, Sénégal" className={inputCls(false)} />
           </Field>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Date de naissance">
               <input {...register('dateNaissance')} placeholder="Ex : 15/03/1985" className={inputCls(false)} />
             </Field>
@@ -327,7 +327,7 @@ export default function NouveauVacatairePage() {
 
         {/* ─── Section 4 — Informations sociales ─── */}
         <FormSection title="Informations sociales" subtitle="Numéros fiscaux et de retraite" icon={<ShieldIcon />}>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="NINEA">
               <input {...register('ninea')} placeholder="Ex : 12345 67 A 23" className={inputCls(false)} />
             </Field>
@@ -339,7 +339,7 @@ export default function NouveauVacatairePage() {
 
         {/* ─── Section 5 — Coordonnées bancaires ─── */}
         <FormSection title="Coordonnées bancaires" subtitle="Informations pour le virement des rémunérations" icon={<BankIcon />}>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Field label="Code banque">
               <input {...register('codeBanque')} placeholder="Ex : 00020" className={inputCls(false)} maxLength={5} />
             </Field>
@@ -350,7 +350,7 @@ export default function NouveauVacatairePage() {
               <input {...register('nomBanque')} placeholder="Ex : CBAO, Ecobank…" className={inputCls(false)} />
             </Field>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Numéro de compte">
               <input {...register('numeroCompte')} placeholder="Ex : 12345678901" className={inputCls(false)} />
             </Field>

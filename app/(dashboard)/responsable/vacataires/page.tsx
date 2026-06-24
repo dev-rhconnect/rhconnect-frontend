@@ -84,13 +84,13 @@ export default function VacatairesPage() {
     <div className="space-y-5">
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Dossiers vacataires</h2>
+          <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Dossiers vacataires</h2>
           <p className="mt-1 text-sm text-gray-500">{stats.tous} vacataire{stats.tous !== 1 ? 's' : ''} enregistré{stats.tous !== 1 ? 's' : ''}</p>
         </div>
         <Link href="/responsable/vacataires/nouveau"
-          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:opacity-90 transition-opacity"
+          className="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:opacity-90 transition-opacity self-start shrink-0"
           style={{ background: '#C88500' }}>
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
@@ -101,7 +101,7 @@ export default function VacatairesPage() {
 
       {/* ── Alertes urgentes ── */}
       {(stats.sansContrat > 0 || stats.sansSignature > 0) && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {stats.sansContrat > 0 && (
             <button onClick={() => handleFiltre('SANS_CONTRAT')}
               className={`flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all hover:shadow-md ${filtre === 'SANS_CONTRAT' ? 'border-amber-400 bg-amber-50' : 'border-amber-200 bg-amber-50/60'}`}>
@@ -216,7 +216,8 @@ export default function VacatairesPage() {
 
         {!isLoading && !isError && filtered.length > 0 && (
           <>
-            <table className="w-full text-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[600px] text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/50">
                   <th className="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-400">Vacataire</th>
@@ -235,6 +236,7 @@ export default function VacatairesPage() {
                 ))}
               </tbody>
             </table>
+            </div>
 
             {/* ── Pagination ── */}
             <div className="flex items-center justify-between border-t border-gray-100 px-5 py-3.5">

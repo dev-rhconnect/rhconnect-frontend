@@ -44,22 +44,22 @@ export default function FinanceEcartsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Écarts de volume horaire</h2>
+          <h2 className="text-xl font-bold sm:text-2xl text-gray-900">Écarts de volume horaire</h2>
           <p className="mt-1 text-sm text-gray-500">Séances dont le VH prévu a été dépassé — justification obligatoire</p>
         </div>
         <button
           onClick={() => exportCSV(seances)}
           disabled={seances.length === 0}
-          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+          className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 self-start shrink-0"
         >
           ↓ Exporter CSV
         </button>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div className="rounded-2xl bg-white p-5 shadow-sm text-center ring-1 ring-orange-200">
           <p className="text-2xl font-bold text-orange-600">{seances.length}</p>
           <p className="text-xs text-gray-400 mt-0.5">Séances avec écart</p>
@@ -100,7 +100,8 @@ export default function FinanceEcartsPage() {
                 </span>
               </div>
 
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px] text-sm">
                 <thead>
                   <tr className="border-b border-gray-100 text-xs text-gray-400 uppercase tracking-wide">
                     <th className="px-5 py-2.5 text-left font-medium">Date</th>
@@ -126,6 +127,7 @@ export default function FinanceEcartsPage() {
                   ))}
                 </tbody>
               </table>
+              </div>
             </div>
           ))}
         </div>

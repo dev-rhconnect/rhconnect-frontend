@@ -27,9 +27,9 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">
+          <h2 className="text-xl font-bold sm:text-2xl text-gray-900">
             Bonjour, {user?.prenom ?? 'Admin'}
           </h2>
           <p className="mt-1 text-sm text-gray-500">
@@ -38,7 +38,7 @@ export default function AdminDashboard() {
         </div>
         <Link
           href="/admin/utilisateurs"
-          className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold text-white"
+          className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-bold text-white self-start shrink-0"
           style={{ background: '#C88500' }}
         >
           Gérer les comptes
