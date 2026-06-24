@@ -57,9 +57,10 @@ const newDossierHref: Partial<Record<Role, string>> = {
 interface SidebarProps {
   collapsed: boolean
   onToggle: () => void
+  onNavClick?: () => void
 }
 
-export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export default function Sidebar({ collapsed, onToggle, onNavClick }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useAuthStore()
@@ -79,6 +80,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
       className={`flex h-full flex-shrink-0 flex-col border-r border-gray-100 bg-white transition-all duration-300 ${
         collapsed ? 'w-16' : 'w-60'
       }`}
+      style={{ minHeight: '100dvh' }}
     >
       {/* Logo centré + toggle */}
       <div className="relative flex items-center justify-center border-b border-gray-100 py-5 px-3">
@@ -115,6 +117,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={onNavClick}
               title={collapsed ? item.label : undefined}
               className={`flex flex-1 items-center gap-3 rounded-lg px-2.5 text-sm transition-colors ${
                 collapsed ? 'justify-center' : ''

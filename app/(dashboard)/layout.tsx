@@ -12,6 +12,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user, _hasHydrated, logout } = useAuthStore()
   const router = useRouter()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const profileRef = useRef<HTMLDivElement>(null)
 
@@ -27,6 +28,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  // Fermer le menu mobile au changement de route
+  useEffect(() => {
+    setMobileMenuOpen(false)
   }, [])
 
   if (!_hasHydrated || !user) {
@@ -46,13 +52,47 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex h-screen overflow-hidden bg-ism-warm">
-      <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(v => !v)} />
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      {/* Overlay mobile */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar — drawer sur mobile, fixe sur desktop */}
+      <div className={`
+        fixed inset-y-0 left-0 z-50 md:relative md:z-auto md:flex md:flex-shrink-0
+        transition-transform duration-300
+        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
+        <Sidebar
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(v => !v)}
+          onNavClick={() => setMobileMenuOpen(false)}
+        />
+      </div>
+
+      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         {/* Header */}
-        <header className="flex h-16 flex-shrink-0 items-center gap-4 border-b border-gray-100 bg-white px-6">
+        <header className="flex h-16 flex-shrink-0 items-center gap-3 border-b border-gray-100 bg-white px-4 md:px-6">
+
+          {/* Burger menu — mobile uniquement */}
+          <button
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 md:hidden flex-shrink-0"
+            onClick={() => setMobileMenuOpen(v => !v)}
+            aria-label="Menu"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+
           {/* Search */}
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 max-w-md hidden sm:block">
             <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-gray-400">
               <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -67,10 +107,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           {/* Actions */}
           <div className="ml-auto flex items-center gap-1">
-            {/* Cloche notifications */}
             <NotificationBell />
 
-            {/* Avatar + menu profil */}
             <div ref={profileRef} className="relative ml-1">
               <button
                 onClick={() => setProfileOpen(o => !o)}
@@ -80,7 +118,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <p className="text-xs font-semibold text-gray-900">{user.prenom} {user.nom}</p>
                   <p className="text-xs text-gray-400">{roleLabel[user.role]}</p>
                 </div>
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ism-900 text-xs font-bold text-ism-gold ring-2 ring-ism-gold/20">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-ism-900 text-xs font-bold text-ism-gold ring-2 ring-ism-gold/20 flex-shrink-0">
                   {initials}
                 </div>
                 <svg className="h-3.5 w-3.5 text-gray-400 hidden sm:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -90,10 +128,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               {profileOpen && (
                 <div className="absolute right-0 top-12 z-50 w-64 rounded-2xl bg-white shadow-xl ring-1 ring-gray-100 overflow-hidden">
-                  {/* Infos utilisateur */}
                   <div className="border-b border-gray-100 px-4 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-ism-900 text-sm font-bold text-ism-gold">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-ism-900 text-sm font-bold text-ism-gold flex-shrink-0">
                         {initials}
                       </div>
                       <div className="min-w-0">
@@ -105,8 +142,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       </div>
                     </div>
                   </div>
-
-                  {/* Actions */}
                   <div className="py-1.5">
                     <Link
                       href="/changer-mot-de-passe"
@@ -120,7 +155,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       Changer le mot de passe
                     </Link>
                   </div>
-
                   <div className="border-t border-gray-100 py-1.5">
                     <button
                       onClick={() => { setProfileOpen(false); handleLogout() }}
@@ -141,21 +175,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-auto p-6">{children}</main>
+        <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
       </div>
     </div>
   )
 }
 
 /* ══════════════════════════════════════════════════════
-   Composant cloche notifications — Diaynaba SOW Sprint 1
+   Composant cloche notifications
    ══════════════════════════════════════════════════════ */
 function NotificationBell() {
   const [ouvert, setOuvert] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const queryClient = useQueryClient()
 
-  // Fermer en cliquant hors du dropdown
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOuvert(false)
@@ -167,7 +200,7 @@ function NotificationBell() {
   const { data: notifs = [] } = useQuery({
     queryKey: ['notifications'],
     queryFn: notificationService.mesDernieres,
-    refetchInterval: 30_000, // rafraîchir toutes les 30 s
+    refetchInterval: 30_000,
   })
 
   const nbNonLues = notifs.filter((n) => !n.lu).length
@@ -200,24 +233,17 @@ function NotificationBell() {
       </button>
 
       {ouvert && (
-        <div className="absolute right-0 top-11 z-50 w-80 rounded-2xl bg-white shadow-xl ring-1 ring-gray-100 overflow-hidden">
-          {/* En-tête dropdown */}
+        <div className="absolute right-0 top-11 z-50 w-80 max-w-[calc(100vw-2rem)] rounded-2xl bg-white shadow-xl ring-1 ring-gray-100 overflow-hidden">
           <div className="flex items-center justify-between border-b border-gray-100 px-4 py-3">
             <span className="text-sm font-bold text-gray-900">
               Notifications {nbNonLues > 0 && <span className="ml-1 text-xs font-normal text-gray-400">({nbNonLues} non lue{nbNonLues > 1 ? 's' : ''})</span>}
             </span>
             {nbNonLues > 0 && (
-              <button
-                onClick={() => toutMarquer()}
-                className="text-xs font-semibold hover:underline"
-                style={{ color: '#C88500' }}
-              >
+              <button onClick={() => toutMarquer()} className="text-xs font-semibold hover:underline" style={{ color: '#C88500' }}>
                 Tout marquer lu
               </button>
             )}
           </div>
-
-          {/* Liste */}
           <div className="max-h-80 overflow-y-auto">
             {notifs.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-10 text-center">
@@ -257,14 +283,10 @@ function NotifItem({ notif: n, onLire }: { notif: NotificationResponse; onLire: 
     >
       <span className="flex-shrink-0 text-lg">{typeIcon[n.type]}</span>
       <div className="min-w-0 flex-1">
-        <p className={`text-xs leading-snug ${!n.lu ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>
-          {n.message}
-        </p>
+        <p className={`text-xs leading-snug ${!n.lu ? 'font-semibold text-gray-900' : 'text-gray-600'}`}>{n.message}</p>
         <p className="mt-0.5 text-xs text-gray-400">{tempsEcoule(n.dateEnvoi)}</p>
       </div>
-      {!n.lu && (
-        <div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full" style={{ background: '#C88500' }} />
-      )}
+      {!n.lu && <div className="mt-1 h-2 w-2 flex-shrink-0 rounded-full" style={{ background: '#C88500' }} />}
     </button>
   )
 }

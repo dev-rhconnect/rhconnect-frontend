@@ -80,15 +80,15 @@ export default function ContratsPage() {
     <div className="space-y-5">
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Contrats</h2>
+          <h2 className="text-xl font-bold text-gray-900 sm:text-2xl">Contrats</h2>
           <p className="mt-1 text-sm text-gray-500">
             {stats.tous} contrat{stats.tous !== 1 ? 's' : ''} — {stats.actifs} actif{stats.actifs !== 1 ? 's' : ''}
           </p>
         </div>
         <Link href="/responsable/vacataires"
-          className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800 hover:bg-amber-100 transition-colors">
+          className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800 hover:bg-amber-100 transition-colors self-start">
           <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" />
           </svg>
@@ -157,6 +157,7 @@ export default function ContratsPage() {
 
       {/* ── Tableau ── */}
       <div className="rounded-2xl bg-white shadow-sm overflow-hidden border border-gray-100">
+        <div className="overflow-x-auto">
 
         {isLoading && (
           <div className="flex items-center justify-center py-20">
@@ -183,7 +184,7 @@ export default function ContratsPage() {
 
         {!isLoading && !isError && filtered.length > 0 && (
           <>
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[700px] text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50/50">
                   <th className="px-5 py-3.5 text-left text-[11px] font-bold uppercase tracking-wider text-gray-400">Vacataire</th>
@@ -199,6 +200,7 @@ export default function ContratsPage() {
                 {paginated.map(c => <ContratRow key={c.id} c={c} />)}
               </tbody>
             </table>
+          </div>
 
             {/* ── Pagination ── */}
             <div className="flex items-center justify-between border-t border-gray-100 px-5 py-3.5">
